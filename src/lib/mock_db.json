@@ -1,0 +1,213 @@
+{
+  "products": [
+    {
+      "id": "mock-natural-100",
+      "title": "Herbal Green Tea for Immunity | Natural",
+      "slug": "herbal-green-tea-natural",
+      "description": "Our standard 100g package. Contains premium green tea infused with organic tulsi leaves, lemongrass, and dry ginger. Handcrafted to support gut health, boost metabolism, and supply a daily wellness dose.",
+      "short_description": "100% natural handcrafted herbal green tea infused with Tulsi, Lemongrass, and Ginger.",
+      "price": 249,
+      "sale_price": 350,
+      "stock": 100,
+      "sku": "KL-HT-NAT-100",
+      "weight": "100g",
+      "category": "Herbal Green Tea",
+      "benefits": [
+        "🔥 Boosts Metabolism",
+        "✨ Rich in Catechins",
+        "⚡ Steady Focus & Energy"
+      ],
+      "ingredients": [
+        "Premium Green Tea Leaves",
+        "Organic Holy Basil (Tulsi)",
+        "Fresh Lemongrass",
+        "Dry Ginger Root"
+      ],
+      "brewing_instructions": [
+        "Heat fresh water to approx. 85°C (bubbles forming, not boiling).",
+        "Add 1 teaspoon (approx 2g) of tea blend into your infuser cup.",
+        "Pour water and steep covered for 3 to 5 minutes.",
+        "Inhale the steam, strain, and sip mindfully."
+      ],
+      "amazon_url": "https://www.amazon.in/dp/B0GQCZM7YN",
+      "img": "/assets/product_natural.png",
+      "images": ["/assets/product_natural.png"],
+      "status": "published",
+      "featured": true,
+      "seo_title": "Kindleaf Herbal Green Tea - 100g Pack",
+      "seo_description": "Buy Kindleaf Herbal Green Tea. Infused with tulsi, lemongrass, and ginger to boost immunity and support metabolism."
+    },
+    {
+      "id": "mock-combo-200",
+      "title": "Herbal Green Tea for Immunity - Combo",
+      "slug": "herbal-green-tea-combo",
+      "description": "Our premium combo pack (2 x 100g pouches). Sourced locally and handcrafted. Provides double the soothing herbal goodness. Best value pack for tea lovers.",
+      "short_description": "Best value combo pack containing two 100g pouches of our immunity herbal green tea.",
+      "price": 449,
+      "sale_price": 600,
+      "stock": 85,
+      "sku": "KL-HT-COMBO-200",
+      "weight": "200g (2x100g)",
+      "category": "Herbal Green Tea",
+      "benefits": [
+        "🍵 Double the Wellness",
+        "🛡️ Long-term Immunity Shield",
+        "💵 Best Value Pack"
+      ],
+      "ingredients": [
+        "Premium Green Tea Leaves",
+        "Organic Holy Basil (Tulsi)",
+        "Fresh Lemongrass",
+        "Dry Ginger Root"
+      ],
+      "brewing_instructions": [
+        "Heat fresh water to approx. 85°C.",
+        "Add 1 teaspoon of tea blend to your cup.",
+        "Pour water and steep covered for 3 to 5 minutes.",
+        "Strain, sip, and take a mindful pause."
+      ],
+      "amazon_url": "https://www.amazon.in/dp/B0GQCZM7YN",
+      "img": "/assets/product_combo.png",
+      "images": ["/assets/product_combo.png"],
+      "status": "published",
+      "featured": true,
+      "seo_title": "Kindleaf Herbal Green Tea - 200g Combo Pack",
+      "seo_description": "Best value Combo pack. 2x100g packs of handcrafted herbal green tea with Ginger, Lemongrass, and Holy Basil."
+    }
+  ],
+  "orders": [
+    {
+      "id": "ord-1",
+      "customer_name": "Rohan Sharma",
+      "customer_email": "rohan@gmail.com",
+      "customer_phone": "+91 98765 43210",
+      "shipping_address": "Flat 402, Sunshine Heights, Bandra West, Mumbai, MH - 400050",
+      "product_title": "Herbal Green Tea for Immunity | Natural",
+      "quantity": 1,
+      "total_price": 249,
+      "status": "delivered",
+      "created_at": "2026-08-05T10:15:30Z"
+    },
+    {
+      "id": "ord-2",
+      "customer_name": "Priya Patel",
+      "customer_email": "priya.patel@yahoo.com",
+      "customer_phone": "+91 87654 32109",
+      "shipping_address": "B-12, Green Glen Layout, Bellandur, Bengaluru, KA - 560103",
+      "product_title": "Herbal Green Tea for Immunity - Combo",
+      "quantity": 2,
+      "total_price": 898,
+      "status": "processing",
+      "created_at": "2026-08-07T08:30:00Z"
+    }
+  ],
+  "customers": [
+    {
+      "id": "cust-1",
+      "name": "Rohan Sharma",
+      "email": "rohan@gmail.com",
+      "phone": "+91 98765 43210",
+      "order_history": [
+        { "orderId": "ord-1", "date": "2026-08-05", "total": 249 }
+      ]
+    },
+    {
+      "id": "cust-2",
+      "name": "Priya Patel",
+      "email": "priya.patel@yahoo.com",
+      "phone": "+91 87654 32109",
+      "order_history": [
+        { "orderId": "ord-2", "date": "2026-08-07", "total": 898 }
+      ]
+    }
+  ],
+  "reviews": [
+    {
+      "id": "rev-1",
+      "customer_name": "Aarav K.",
+      "rating": 5,
+      "comment": "Absolutely love this blend! The flavor of lemongrass and ginger is extremely balanced. I drink it every evening and my digestion has improved significantly.",
+      "approved": true,
+      "featured": true,
+      "created_at": "2026-08-01T12:00:00Z"
+    },
+    {
+      "id": "rev-2",
+      "customer_name": "Meera S.",
+      "rating": 5,
+      "comment": "This is very different from standard commercial green teas. You can see real ginger particles and whole leaves. Highly recommended combo pack!",
+      "approved": true,
+      "featured": true,
+      "created_at": "2026-08-03T14:30:00Z"
+    },
+    {
+      "id": "rev-3",
+      "customer_name": "Vikram Singh",
+      "rating": 4,
+      "comment": "Very nice aroma. Good packaging, though I wish there was a zipper seal on the pouch.",
+      "approved": true,
+      "featured": false,
+      "created_at": "2026-08-04T09:15:00Z"
+    }
+  ],
+  "homepage_content": {
+    "hero": {
+      "tag": "🌿 100% Handcrafted & Natural",
+      "heading": "Awaken Your Senses, Restore Your Calm",
+      "description": "Discover a premium herbal green tea crafted to support digestion, immunity, and daily wellness — naturally. A quiet pause in a busy world.",
+      "primary_btn_text": "Shop Organic Blend",
+      "secondary_btn_text": "Buy on Amazon"
+    },
+    "why_kindleaf": {
+      "tag": "Slow Living",
+      "heading": "Not another notification. Not another deadline.",
+      "description": "We spend so much time taking care of everything around us that we often forget to recharge ourselves. Kindleaf is more than just green tea. It’s a mindful ritual, a warm cup in your hands, and a small pause that makes a big difference."
+    },
+    "brewing_guide": {
+      "tag": "The Art of Tea",
+      "heading": "How to Brew the Perfect Cup",
+      "description": "A mindful brew unlocks the full botanical synergy of Green Tea, Tulsi, Lemongrass, and Ginger."
+    }
+  },
+  "settings": {
+    "website_name": "Kindleaf Wellness",
+    "logo_url": "/assets/logo.png",
+    "favicon_url": "/favicon.ico",
+    "contact_email": "support@kindleaf.in",
+    "contact_phone": "+91 6396461480",
+    "address": "Vill. Katoora, post darapur milawali, jasrana firozabad 283136, Uttar Pradesh",
+    "instagram_url": "https://instagram.com/kindleaf.wellness",
+    "facebook_url": "https://facebook.com",
+    "whatsapp_phone": "916396461480",
+    "amazon_store_url": "https://www.amazon.in/dp/B0GQCZM7YN",
+    "seo_title": "Kindleaf - Premium Handcrafted Herbal Green Tea",
+    "seo_description": "Experience Kindleaf Herbal Green Tea, a 100% natural blend of premium green tea, Holy Basil (Tulsi), Lemongrass, and dry Ginger. Crafted in Firozabad, Uttar Pradesh.",
+    "analytics_id": "G-XXXXXX"
+  },
+  "media": [
+    {
+      "id": "media-1",
+      "filename": "product_natural.png",
+      "url": "/assets/product_natural.png",
+      "size": 754806,
+      "mime_type": "image/png",
+      "created_at": "2026-08-07T10:00:00Z"
+    },
+    {
+      "id": "media-2",
+      "filename": "product_combo.png",
+      "url": "/assets/product_combo.png",
+      "size": 831215,
+      "mime_type": "image/png",
+      "created_at": "2026-08-07T10:00:00Z"
+    },
+    {
+      "id": "media-3",
+      "filename": "hero_tea_cup.png",
+      "url": "/assets/hero_tea_cup.png",
+      "size": 795683,
+      "mime_type": "image/png",
+      "created_at": "2026-08-07T10:00:00Z"
+    }
+  ]
+}

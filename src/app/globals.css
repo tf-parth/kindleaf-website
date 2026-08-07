@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
+  
+  --color-gold: #c5a880;
+  --color-gold-hover: #b79c73;
+  --color-accent-green: #2d6a4f;
+  --color-accent-green-dark: #1b4332;
+  --color-cream: #f4f0e6;
+  --color-cream-white: #f8f6f2;
+  --color-dark-bg: #0c1912;
+  --color-card-bg: rgba(22, 51, 34, 0.4);
+}
+
+:root {
+  --background: #0c1912;
+  --foreground: #e2e8f0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans), sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6, .font-serif {
+  font-family: var(--font-serif), Georgia, serif;
+}
+
+/* Glassmorphism panel styling */
+.glass-panel {
+  background: rgba(22, 51, 34, 0.25);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-heavy {
+  background: rgba(14, 36, 23, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-navbar {
+  background: rgba(20, 40, 20, 0.25);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #08100b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1b4332;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c5a880;
+}
+
+/* Float animations */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(5deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Custom Steam Keyframe */
+@keyframes steam {
+  0% { transform: translateY(0) scaleX(1); opacity: 0; }
+  15% { opacity: 0.5; }
+  50% { transform: translateY(-20px) scaleX(1.2); opacity: 0.2; }
+  95% { opacity: 0; }
+  100% { transform: translateY(-35px) scaleX(0.8); opacity: 0; }
+}
+
+.steam-line {
+  animation: steam 3s infinite ease-in-out;
+}
