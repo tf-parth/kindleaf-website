@@ -85,6 +85,69 @@ h1, h2, h3, h4, h5, h6, .font-serif {
   animation: float 6s ease-in-out infinite;
 }
 
+/* Organic Falling Leaf Animations */
+@keyframes leaf-fall-1 {
+  0% {
+    transform: translateY(-12vh) translateX(0) rotate(0deg);
+  }
+  30% {
+    transform: translateY(25vh) translateX(35px) rotate(120deg);
+  }
+  60% {
+    transform: translateY(65vh) translateX(-25px) rotate(240deg);
+  }
+  100% {
+    transform: translateY(112vh) translateX(15px) rotate(360deg);
+  }
+}
+
+@keyframes leaf-fall-2 {
+  0% {
+    transform: translateY(-12vh) translateX(0) rotate(0deg);
+  }
+  40% {
+    transform: translateY(45vh) translateX(-40px) rotate(-160deg);
+  }
+  80% {
+    transform: translateY(85vh) translateX(30px) rotate(-280deg);
+  }
+  100% {
+    transform: translateY(112vh) translateX(-5px) rotate(-360deg);
+  }
+}
+
+@keyframes leaf-fall-3 {
+  0% {
+    transform: translateY(-12vh) translateX(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(50vh) translateX(20px) rotate(220deg);
+  }
+  100% {
+    transform: translateY(112vh) translateX(-20px) rotate(440deg);
+  }
+}
+
+.falling-leaf-1 {
+  animation: leaf-fall-1 linear infinite;
+}
+
+.falling-leaf-2 {
+  animation: leaf-fall-2 linear infinite;
+}
+
+.falling-leaf-3 {
+  animation: leaf-fall-3 linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .falling-leaf-1,
+  .falling-leaf-2,
+  .falling-leaf-3 {
+    animation: none !important;
+  }
+}
+
 /* Custom Steam Keyframe */
 @keyframes steam {
   0% { transform: translateY(0) scaleX(1); opacity: 0; }

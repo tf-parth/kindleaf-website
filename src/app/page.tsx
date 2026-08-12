@@ -229,11 +229,12 @@ export default function PublicHome() {
       newLeaves.push({
         id: i,
         left: Math.random() * 100,
-        duration: 10 + Math.random() * 15,
-        delay: Math.random() * -20,
-        scale: 0.5 + Math.random() * 1.2,
-        opacity: 0.15 + Math.random() * 0.25,
-        isGold: Math.random() > 0.5
+        duration: 12 + Math.random() * 8, // 12s to 20s for smooth, natural speed
+        delay: Math.random() * -20, // Negative delay offsets so they are distributed across the page on load
+        scale: 0.5 + Math.random() * 0.7,
+        opacity: 0.15 + Math.random() * 0.3,
+        isGold: Math.random() > 0.6,
+        animType: (i % 3) + 1 // Evenly distribute animation patterns (1, 2, 3)
       });
     }
     setLeaves(newLeaves);
@@ -533,19 +534,26 @@ Thank you!`;
         {/* Floating Leaves */}
         <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
           {leaves.map(leaf => (
-            <span 
+            <div 
               key={leaf.id} 
-              className="absolute inline-block w-4 h-4 rounded-tl-[10px] rounded-br-[10px] animate-[float_8s_infinite_ease-in-out]"
+              className="absolute pointer-events-none"
               style={{
                 left: `${leaf.left}%`,
-                top: `${20 + Math.random() * 60}%`,
-                animationDuration: `${leaf.duration}s`,
-                animationDelay: `${leaf.delay}s`,
+                top: `0px`,
                 transform: `scale(${leaf.scale})`,
-                opacity: leaf.opacity,
-                backgroundColor: leaf.isGold ? '#c5a880' : '#2d6a4f'
+                opacity: leaf.opacity
               }}
-            />
+            >
+              <span 
+                className={`inline-block w-4 h-4 rounded-tl-[12px] rounded-br-[12px] shadow-sm falling-leaf-${leaf.animType}`}
+                style={{
+                  animationDuration: `${leaf.duration}s`,
+                  animationDelay: `${leaf.delay}s`,
+                  backgroundColor: leaf.isGold ? '#c5a880' : '#2d6a4f',
+                  border: '1px solid rgba(255, 255, 255, 0.05)'
+                }}
+              />
+            </div>
           ))}
         </div>
       </section>
