@@ -4,8 +4,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingBag, Star, Menu, X, Phone, Mail, MapPin, 
-  Send, Instagram, Facebook, Compass, ArrowRight, Clock, Award
+  Send, Instagram, Facebook, Compass, ArrowRight, Clock, Award, User
 } from 'lucide-react';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 // Intentions for Planner
 const intentionsByTime: any = {
@@ -157,6 +158,10 @@ export default function PublicHome() {
   const [filter200, setFilter200] = useState(true);
   const [sortVal, setSortVal] = useState('recommended');
 
+  // Auth Session States
+  const [sessionUser, setSessionUser] = useState<any>(null);
+  const [sessionRole, setSessionRole] = useState<string>('');
+
   // Checkout Modal State
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -173,6 +178,49 @@ export default function PublicHome() {
       setScrolled(window.scrollY > 50);
     };
     window.addEventListener('scroll', handleScroll);
+
+    // Detect active user sessions
+    if (typeof window !== 'undefined') {
+      const adminSession = localStorage.getItem('admin_session');
+      const customerSession = localStorage.getItem('customer_session');
+      if (adminSession) {
+        setSessionUser(JSON.parse(adminSession));
+        setSessionRole('admin');
+      } else if (customerSession) {
+        setSessionUser(JSON.parse(customerSession));
+        setSessionRole('customer');
+      }
+    }
+
+    const client = supabase;
+    if (isSupabaseConfigured && client) {
+      client.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          client
+            .from('admins')
+            .select('role')
+            .eq('id', session.user.id)
+            .single()
+            .then(({ data: adminRecord }) => {
+              if (adminRecord && adminRecord.role === 'admin') {
+                setSessionRole('admin');
+                setSessionUser(session.user);
+              } else {
+                setSessionRole('customer');
+                client
+                  .from('customers')
+                  .select('*')
+                  .eq('email', session.user.email)
+                  .single()
+                  .then(({ data: profile }) => {
+                    if (profile) setSessionUser(profile);
+                    else setSessionUser({ name: session.user.email?.split('@')[0], email: session.user.email });
+                  });
+              }
+            });
+        }
+      });
+    }
 
     // Load initial floating leaves
     const leafCount = 15;
@@ -372,6 +420,24 @@ Thank you!`;
             <a href="#planner" className="text-[#F8F6F2] hover:text-gold transition-colors text-sm font-medium relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-gold after:transition-all hover:after:w-full">Ritual Planner</a>
             <a href="#brewing" className="text-[#F8F6F2] hover:text-gold transition-colors text-sm font-medium relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-gold after:transition-all hover:after:w-full">Brewing Guide</a>
             <a href="#story" className="text-[#F8F6F2] hover:text-gold transition-colors text-sm font-medium relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-gold after:transition-all hover:after:w-full">Our Story</a>
+            
+            {sessionUser ? (
+              <a 
+                href={sessionRole === 'admin' ? "/admin/dashboard" : "/account"} 
+                className="text-[#F8F6F2] hover:text-gold transition-colors text-sm font-semibold flex items-center gap-1.5"
+              >
+                <User size={15} />
+                <span>{sessionRole === 'admin' ? "Dashboard" : "Account"}</span>
+              </a>
+            ) : (
+              <a 
+                href="/login" 
+                className="text-[#F8F6F2] hover:text-gold transition-colors text-sm font-medium relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-gold after:transition-all hover:after:w-full"
+              >
+                Login
+              </a>
+            )}
+
             <a href="#shop" className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-5 py-2.5 rounded-full transition-colors text-sm shadow-md">Shop Now</a>
           </nav>
 
@@ -396,6 +462,26 @@ Thank you!`;
             <a href="#planner" className="text-[#F8F6F2] text-xl font-medium" onClick={() => setMenuOpen(false)}>Ritual Planner</a>
             <a href="#brewing" className="text-[#F8F6F2] text-xl font-medium" onClick={() => setMenuOpen(false)}>Brewing Guide</a>
             <a href="#story" className="text-[#F8F6F2] text-xl font-medium" onClick={() => setMenuOpen(false)}>Our Story</a>
+            
+            {sessionUser ? (
+              <a 
+                href={sessionRole === 'admin' ? "/admin/dashboard" : "/account"} 
+                className="text-[#F8F6F2] text-xl font-medium flex items-center gap-1.5"
+                onClick={() => setMenuOpen(false)}
+              >
+                <User size={18} />
+                <span>{sessionRole === 'admin' ? "Dashboard" : "Account"}</span>
+              </a>
+            ) : (
+              <a 
+                href="/login" 
+                className="text-[#F8F6F2] text-xl font-medium"
+                onClick={() => setMenuOpen(false)}
+              >
+                Login
+              </a>
+            )}
+
             <a href="#shop" className="bg-gold text-[#0c1912] font-semibold px-8 py-3.5 rounded-full text-lg" onClick={() => setMenuOpen(false)}>Shop Now</a>
           </motion.div>
         )}

@@ -30,7 +30,12 @@ export default function AdminLayout({
         if (mockSession) {
           setAuthorized(true);
         } else {
-          router.push('/admin/login');
+          const customerSession = localStorage.getItem('customer_session');
+          if (customerSession) {
+            router.push('/account');
+          } else {
+            router.push('/login');
+          }
         }
         setLoading(false);
         return;
@@ -50,11 +55,11 @@ export default function AdminLayout({
           if (!error && adminRecord && adminRecord.role === 'admin') {
             setAuthorized(true);
           } else {
-            await supabase.auth.signOut();
-            router.push('/admin/login');
+            // Customer logged in, redirect to customer portal
+            router.push('/account');
           }
         } else {
-          router.push('/admin/login');
+          router.push('/login');
         }
       }
       setLoading(false);

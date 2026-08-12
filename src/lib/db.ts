@@ -198,6 +198,61 @@ export async function getCustomers() {
   return readMockDb().customers;
 }
 
+export async function registerCustomer(customer: any) {
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase.from('customers').insert([{
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      order_history: []
+    }]).select();
+    if (!error && data && data[0]) return data[0];
+    throw new Error(error?.message || 'Supabase customer profile creation failed');
+  }
+
+  const db = readMockDb();
+  const existing = db.customers.find((c: any) => c.email?.toLowerCase() === customer.email?.toLowerCase());
+  if (existing) {
+    throw new Error('An account with this email already exists.');
+  }
+
+  const newCustomer = {
+    id: 'cust-' + Math.random().toString(36).substr(2, 9),
+    name: customer.name,
+    email: customer.email,
+    phone: customer.phone,
+    password: customer.password,
+    order_history: [],
+    created_at: new Date().toISOString()
+  };
+
+  db.customers.push(newCustomer);
+  writeMockDb(db);
+
+  const { password, ...safeCustomer } = newCustomer;
+  return safeCustomer;
+}
+
+export async function authenticateCustomer(email: string, passwordInput: string) {
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase.from('customers').select('*').eq('email', email).single();
+    if (!error && data) return data;
+    return { name: email.split('@')[0], email, phone: '' };
+  }
+
+  const db = readMockDb();
+  const customer = db.customers.find(
+    (c: any) => c.email?.toLowerCase() === email.toLowerCase() && c.password === passwordInput
+  );
+  if (!customer) {
+    throw new Error('Invalid email or password.');
+  }
+
+  const { password, ...safeCustomer } = customer;
+  return safeCustomer;
+}
+
+
 // 4. REVIEWS
 export async function getReviews() {
   if (isSupabaseConfigured && supabase) {

@@ -15,23 +15,9 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
 
-  // If already logged in, redirect to dashboard
+  // Redirect to unified common login page
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const mockSession = localStorage.getItem('admin_session');
-      if (mockSession) {
-        router.push('/admin/dashboard');
-        return;
-      }
-    }
-
-    if (isSupabaseConfigured && supabase) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          router.push('/admin/dashboard');
-        }
-      });
-    }
+    router.replace('/login');
   }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
