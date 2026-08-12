@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { 
   ShoppingBag, Star, Menu, X, Phone, Mail, MapPin, 
   Send, Instagram, Facebook, Compass, ArrowRight, Clock, Award, User
@@ -95,6 +95,7 @@ const ritualResults: any = {
 };
 
 export default function PublicHome() {
+  const shouldReduceMotion = useReducedMotion();
   // Database States
   const [products, setProducts] = useState<any[]>([]);
   const [homepage, setHomepage] = useState<any>({
@@ -226,15 +227,21 @@ export default function PublicHome() {
     const leafCount = 15;
     const newLeaves = [];
     for (let i = 0; i < leafCount; i++) {
+      const yStart = (Math.random() * 130) - 15; // distributed vertically across -15vh to 115vh on mount
+      const duration = 8 + Math.random() * 10; // 8s to 18s total falling duration
+      const distanceRatio = (115 - yStart) / 130; // percentage of distance left to fall
       newLeaves.push({
         id: i,
         left: Math.random() * 100,
-        duration: 12 + Math.random() * 8, // 12s to 20s for smooth, natural speed
-        delay: Math.random() * -20, // Negative delay offsets so they are distributed across the page on load
+        yStart,
+        duration,
+        currentDuration: duration * distanceRatio, // adjust duration for starting midway so falling speed is uniform
         scale: 0.5 + Math.random() * 0.7,
         opacity: 0.15 + Math.random() * 0.3,
         isGold: Math.random() > 0.6,
-        animType: (i % 3) + 1 // Evenly distribute animation patterns (1, 2, 3)
+        drift: -30 + Math.random() * 60,
+        rotate: 180 + Math.random() * 360,
+        animCount: 0
       });
     }
     setLeaves(newLeaves);
@@ -264,6 +271,31 @@ export default function PublicHome() {
       clearInterval(brewIntervalRef.current);
     };
   }, []);
+
+  // Reset a single leaf properties when it completes falling below viewport
+  const handleLeafComplete = (id: number) => {
+    setLeaves(prevLeaves => 
+      prevLeaves.map(leaf => {
+        if (leaf.id === id) {
+          const nextDuration = 8 + Math.random() * 10;
+          return {
+            ...leaf,
+            left: Math.random() * 100,
+            yStart: -15, // Re-enter from the top edge
+            duration: nextDuration,
+            currentDuration: nextDuration, // Full falling path duration
+            scale: 0.5 + Math.random() * 0.7,
+            opacity: 0.15 + Math.random() * 0.3,
+            isGold: Math.random() > 0.6,
+            drift: -30 + Math.random() * 60,
+            rotate: 180 + Math.random() * 360,
+            animCount: leaf.animCount + 1 // Increment to trigger key remount
+          };
+        }
+        return leaf;
+      })
+    );
+  };
 
   // Brewing simulation logic
   const startBrew = () => {
@@ -534,26 +566,40 @@ Thank you!`;
         {/* Floating Leaves */}
         <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
           {leaves.map(leaf => (
-            <div 
-              key={leaf.id} 
+            <motion.div
+              key={`${leaf.id}-${leaf.animCount}`}
               className="absolute pointer-events-none"
-              style={{
+              initial={{
                 left: `${leaf.left}%`,
-                top: `0px`,
-                transform: `scale(${leaf.scale})`,
-                opacity: leaf.opacity
+                top: 0,
+                y: `${leaf.yStart}vh`,
+                rotate: 0,
+                x: 0
+              }}
+              animate={shouldReduceMotion ? {} : {
+                y: "115vh",
+                x: [0, leaf.drift * 0.4, leaf.drift * -0.3, leaf.drift * 0.8, leaf.drift],
+                rotate: [0, leaf.rotate * 0.25, leaf.rotate * 0.5, leaf.rotate * 0.75, leaf.rotate]
+              }}
+              transition={{
+                duration: leaf.currentDuration,
+                ease: "linear"
+              }}
+              onAnimationComplete={() => handleLeafComplete(leaf.id)}
+              style={{
+                opacity: leaf.opacity,
+                transformOrigin: "center"
               }}
             >
               <span 
-                className={`inline-block w-4 h-4 rounded-tl-[12px] rounded-br-[12px] shadow-sm falling-leaf-${leaf.animType}`}
+                className="inline-block w-4 h-4 rounded-tl-[12px] rounded-br-[12px] shadow-sm"
                 style={{
-                  animationDuration: `${leaf.duration}s`,
-                  animationDelay: `${leaf.delay}s`,
+                  transform: `scale(${leaf.scale})`,
                   backgroundColor: leaf.isGold ? '#c5a880' : '#2d6a4f',
                   border: '1px solid rgba(255, 255, 255, 0.05)'
                 }}
               />
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
