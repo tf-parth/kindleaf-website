@@ -2,20 +2,20 @@
   "products": [
     {
       "id": "mock-natural-100",
-      "title": "Herbal Green Tea for Immunity | Natural",
+      "title": "Handcrafted Herbal Green Tea | Natural",
       "slug": "herbal-green-tea-natural",
-      "description": "Our standard 100g package. Contains premium green tea infused with organic tulsi leaves, lemongrass, and dry ginger. Handcrafted to support gut health, boost metabolism, and supply a daily wellness dose.",
+      "description": "Our standard 100g package. Contains premium green tea infused with organic tulsi leaves, lemongrass, and dry ginger. Blended with care for a fresh, balanced flavor to complement your daily tea ritual.",
       "short_description": "100% natural handcrafted herbal green tea infused with Tulsi, Lemongrass, and Ginger.",
       "price": 249,
-      "sale_price": 350,
+      "sale_price": null,
       "stock": 100,
       "sku": "KL-HT-NAT-100",
       "weight": "100g",
       "category": "Herbal Green Tea",
       "benefits": [
-        "🔥 Boosts Metabolism",
-        "✨ Rich in Catechins",
-        "⚡ Steady Focus & Energy"
+        "🍃 100% Natural Base",
+        "🍋 Citrus Lemongrass notes",
+        "🫚 Warm Ginger finish"
       ],
       "ingredients": [
         "Premium Green Tea Leaves",
@@ -41,19 +41,19 @@
     },
     {
       "id": "mock-combo-200",
-      "title": "Herbal Green Tea for Immunity - Combo",
+      "title": "Handcrafted Herbal Green Tea - Combo",
       "slug": "herbal-green-tea-combo",
-      "description": "Our premium combo pack (2 x 100g pouches). Sourced locally and handcrafted. Provides double the soothing herbal goodness. Best value pack for tea lovers.",
+      "description": "Our premium combo pack (2 x 100g pouches). Sourced locally and handcrafted. Contains two pouches of our signature blend of green tea, tulsi, lemongrass, and ginger.",
       "short_description": "Best value combo pack containing two 100g pouches of our immunity herbal green tea.",
       "price": 449,
-      "sale_price": 600,
+      "sale_price": null,
       "stock": 85,
       "sku": "KL-HT-COMBO-200",
       "weight": "200g (2x100g)",
       "category": "Herbal Green Tea",
       "benefits": [
-        "🍵 Double the Wellness",
-        "🛡️ Long-term Immunity Shield",
+        "🍵 Double the Blend",
+        "✨ Fresh & Aromatic",
         "💵 Best Value Pack"
       ],
       "ingredients": [
@@ -86,7 +86,7 @@
       "customer_email": "singhprathamkumar598@gmail.com",
       "customer_phone": "07701816657",
       "shipping_address": "house no 11 rama garhi near old bus stand ghaziabad",
-      "product_title": "Herbal Green Tea for Immunity | Natural",
+      "product_title": "Handcrafted Herbal Green Tea | Natural",
       "quantity": 1,
       "total_price": 249,
       "created_at": "2026-08-09T03:54:32.437Z"
@@ -97,7 +97,7 @@
       "customer_email": "rohan@gmail.com",
       "customer_phone": "+91 98765 43210",
       "shipping_address": "Flat 402, Sunshine Heights, Bandra West, Mumbai, MH - 400050",
-      "product_title": "Herbal Green Tea for Immunity | Natural",
+      "product_title": "Handcrafted Herbal Green Tea | Natural",
       "quantity": 1,
       "total_price": 249,
       "status": "delivered",
@@ -109,7 +109,7 @@
       "customer_email": "priya.patel@yahoo.com",
       "customer_phone": "+91 87654 32109",
       "shipping_address": "B-12, Green Glen Layout, Bellandur, Bengaluru, KA - 560103",
-      "product_title": "Herbal Green Tea for Immunity - Combo",
+      "product_title": "Handcrafted Herbal Green Tea - Combo",
       "quantity": 2,
       "total_price": 898,
       "status": "processing",
@@ -163,7 +163,7 @@
       "id": "rev-1",
       "customer_name": "Aarav K.",
       "rating": 5,
-      "comment": "Absolutely love this blend! The flavor of lemongrass and ginger is extremely balanced. I drink it every evening and my digestion has improved significantly.",
+      "comment": "Absolutely love this blend! The flavor of lemongrass and ginger is extremely balanced. I drink it every evening as part of my routine.",
       "approved": true,
       "featured": true,
       "created_at": "2026-08-01T12:00:00Z"
@@ -191,9 +191,9 @@
     "hero": {
       "tag": "🌿 100% Handcrafted & Natural",
       "heading": "Awaken Your Senses, Restore Your Calm",
-      "description": "Discover a premium herbal green tea crafted to support digestion, immunity, and daily wellness — naturally. A quiet pause in a busy world.",
-      "primary_btn_text": "Shop Organic Blend",
-      "secondary_btn_text": "Buy on Amazon"
+      "description": "A handcrafted herbal green tea made with green tea, tulsi, lemongrass and ginger — blended for a simple, mindful tea ritual.",
+      "primary_btn_text": "GET THE KINDLEAF APP",
+      "secondary_btn_text": "EXPLORE THE BLEND"
     },
     "why_kindleaf": {
       "tag": "Slow Living",
@@ -217,8 +217,8 @@
     "facebook_url": "https://facebook.com",
     "whatsapp_phone": "916396461480",
     "amazon_store_url": "https://www.amazon.in/dp/B0GQCZM7YN",
-    "seo_title": "Kindleaf - Premium Handcrafted Herbal Green Tea",
-    "seo_description": "Experience Kindleaf Herbal Green Tea, a 100% natural blend of premium green tea, Holy Basil (Tulsi), Lemongrass, and dry Ginger. Crafted in Firozabad, Uttar Pradesh.",
+    "seo_title": "Kindleaf | Handcrafted Herbal Green Tea",
+    "seo_description": "Experience Kindleaf Herbal Green Tea, a 100% natural blend of premium green tea, Holy Basil (Tulsi), Lemongrass, and dry Ginger. Blended with care for a simple, mindful daily tea ritual.",
     "analytics_id": "G-XXXXXX"
   },
   "media": [
