@@ -30,12 +30,7 @@ export default function AdminLayout({
         if (mockSession) {
           setAuthorized(true);
         } else {
-          const customerSession = localStorage.getItem('customer_session');
-          if (customerSession) {
-            router.push('/account');
-          } else {
-            router.push('/login');
-          }
+          router.push('/admin/login');
         }
         setLoading(false);
         return;
@@ -55,11 +50,10 @@ export default function AdminLayout({
           if (!error && adminRecord && adminRecord.role === 'admin') {
             setAuthorized(true);
           } else {
-            // Customer logged in, redirect to customer portal
-            router.push('/account');
+            router.push('/admin/login');
           }
         } else {
-          router.push('/login');
+          router.push('/admin/login');
         }
       }
       setLoading(false);

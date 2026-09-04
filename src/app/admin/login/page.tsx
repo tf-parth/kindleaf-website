@@ -15,11 +15,6 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
 
-  // Redirect to unified common login page
-  useEffect(() => {
-    router.replace('/login');
-  }, [router]);
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');

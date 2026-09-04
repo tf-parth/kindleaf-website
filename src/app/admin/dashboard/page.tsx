@@ -70,14 +70,14 @@ export default function AdminDashboard() {
       if (mockSession) {
         setAdminUser(JSON.parse(mockSession));
       } else if (!isSupabaseConfigured) {
-        router.push('/login');
+        router.push('/admin/login');
       }
     }
 
     if (isSupabaseConfigured && supabase) {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (!session) {
-          router.push('/login');
+          router.push('/admin/login');
         } else {
           setAdminUser(session.user);
         }
@@ -114,7 +114,7 @@ export default function AdminDashboard() {
       await supabase.auth.signOut();
     }
     localStorage.removeItem('admin_session');
-    router.push('/login');
+    router.push('/admin/login');
   };
 
   // =========================================================
