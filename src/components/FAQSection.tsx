@@ -11,45 +11,49 @@ interface FAQItem {
 
 interface FAQSectionProps {
   onOpenAppModal: () => void;
+  faqs?: any[];
 }
 
-export default function FAQSection({ onOpenAppModal }: FAQSectionProps) {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+const DEFAULT_FAQS: FAQItem[] = [
+  {
+    question: "What is Kindleaf?",
+    answer: "Kindleaf is an artisanal Indian herbal tea brand. Founded by Gaurav Singh from a soldier's family in Jasrana, Uttar Pradesh, we craft 100% natural herbal green tea blends designed for mindful daily tea rituals."
+  },
+  {
+    question: "What ingredients are used in the blend?",
+    answer: "Kindleaf contains exactly four natural botanicals: Green Tea Leaves (Camellia sinensis), Holy Basil / Tulsi (Ocimum tenuiflorum), Lemongrass (Cymbopogon citratus), and Dried Ginger Root (Zingiber officinale). There are no artificial flavours, sprays, or preservatives."
+  },
+  {
+    question: "How should Kindleaf be brewed for optimal flavour?",
+    answer: "Heat fresh water to approximately 85°C (bubbles forming gently, not a violent rolling boil). Add 1 teaspoon (about 2 grams) to your cup or infuser, pour the water, and steep covered for 3 to 5 minutes. Strain and sip mindfully."
+  },
+  {
+    question: "What does the blend taste like?",
+    answer: "The blend offers a balanced, smooth flavour profile: fresh, crisp green tea with an uplifting citrus aroma from lemongrass, a fragrant peppery middle from Holy Basil, and a comforting warm finish from dry ginger."
+  },
+  {
+    question: "Where can I purchase Kindleaf?",
+    answer: "To ensure direct freshness and direct small-batch packaging, Kindleaf products are ordered exclusively through the official Kindleaf Mobile App for Android and iOS. This website is purely educational and does not process payments or orders directly."
+  },
+  {
+    question: "How does the Kindleaf App work?",
+    answer: "The Kindleaf Mobile App allows you to order fresh batches directly, track small-batch dispatch in real time, access daily guided tea mindfulness timers, and receive notifications when limited seasonal harvests become available."
+  },
+  {
+    question: "Does Kindleaf contain caffeine?",
+    answer: "Yes, because the base of our blend is natural Camellia sinensis (green tea leaves), it naturally contains a mild amount of caffeine (typically 20-30mg per cup, roughly one-third of a cup of coffee). It is paired with calming herbs like Tulsi for a steady, jitter-free tea moment."
+  },
+  {
+    question: "What is the shelf life and how should it be stored?",
+    answer: "Kindleaf tea retains its optimal aromatic freshness for 12 months from the packaging date. Keep the pouch tightly sealed in a cool, dry place away from direct sunlight, moisture, and strong spices."
+  }
+];
 
-  const faqs: FAQItem[] = [
-    {
-      question: "What is Kindleaf?",
-      answer: "Kindleaf is an artisanal Indian herbal tea brand. Founded by Gaurav Singh from a soldier's family in Jasrana, Uttar Pradesh, we craft 100% natural herbal green tea blends designed for mindful daily tea rituals."
-    },
-    {
-      question: "What ingredients are used in the blend?",
-      answer: "Kindleaf contains exactly four natural botanicals: Green Tea Leaves (Camellia sinensis), Holy Basil / Tulsi (Ocimum tenuiflorum), Lemongrass (Cymbopogon citratus), and Dried Ginger Root (Zingiber officinale). There are no artificial flavours, sprays, or preservatives."
-    },
-    {
-      question: "How should Kindleaf be brewed for optimal flavour?",
-      answer: "Heat fresh water to approximately 85°C (bubbles forming gently, not a violent rolling boil). Add 1 teaspoon (about 2 grams) to your cup or infuser, pour the water, and steep covered for 3 to 5 minutes. Strain and sip mindfully."
-    },
-    {
-      question: "What does the blend taste like?",
-      answer: "The blend offers a balanced, smooth flavour profile: fresh, crisp green tea with an uplifting citrus aroma from lemongrass, a fragrant peppery middle from Holy Basil, and a comforting warm finish from dry ginger."
-    },
-    {
-      question: "Where can I purchase Kindleaf?",
-      answer: "To ensure direct freshness and direct small-batch packaging, Kindleaf products are ordered exclusively through the official Kindleaf Mobile App for Android and iOS. This website is purely educational and does not process payments or orders directly."
-    },
-    {
-      question: "How does the Kindleaf App work?",
-      answer: "The Kindleaf Mobile App allows you to order fresh batches directly, track small-batch dispatch in real time, access daily guided tea mindfulness timers, and receive notifications when limited seasonal harvests become available."
-    },
-    {
-      question: "Does Kindleaf contain caffeine?",
-      answer: "Yes, because the base of our blend is natural Camellia sinensis (green tea leaves), it naturally contains a mild amount of caffeine (typically 20-30mg per cup, roughly one-third of a cup of coffee). It is paired with calming herbs like Tulsi for a steady, jitter-free tea moment."
-    },
-    {
-      question: "What is the shelf life and how should it be stored?",
-      answer: "Kindleaf tea retains its optimal aromatic freshness for 12 months from the packaging date. Keep the pouch tightly sealed in a cool, dry place away from direct sunlight, moisture, and strong spices."
-    }
-  ];
+export default function FAQSection({ onOpenAppModal, faqs: dynamicFaqs }: FAQSectionProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const faqs: FAQItem[] = (dynamicFaqs && dynamicFaqs.length > 0)
+    ? dynamicFaqs.map(f => ({ question: f.question, answer: f.answer }))
+    : DEFAULT_FAQS;
 
   return (
     <section id="faq" className="py-24 bg-[#0c1912] border-t border-white/5 relative">

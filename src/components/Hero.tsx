@@ -59,7 +59,7 @@ export default function Hero({ onOpenAppModal }: HeroProps) {
   };
 
   return (
-    <section className="relative min-h-[92vh] flex items-center justify-center pt-28 pb-16 overflow-hidden bg-[#0c1912]">
+    <section className="relative min-h-[92vh] flex items-center justify-center pt-36 sm:pt-40 md:pt-44 lg:pt-48 pb-16 overflow-hidden bg-[#0c1912]">
       {/* Ambient background glows */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(45,106,79,0.25),transparent_60%)] pointer-events-none" />
       <div className="absolute -bottom-32 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gold/5 rounded-full blur-3xl pointer-events-none" />

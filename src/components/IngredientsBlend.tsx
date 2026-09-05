@@ -3,57 +3,78 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function IngredientsBlend() {
-  const [selectedId, setSelectedId] = useState<string>('greentea');
+interface IngredientsBlendProps {
+  items?: any[];
+}
 
-  const ingredients = [
-    {
-      id: 'greentea',
-      number: '01',
-      name: 'GREEN TEA',
-      botanical: 'Camellia sinensis',
-      role: 'Tea Base',
-      flavorAroma: 'Fresh, slightly astringent tea base; gives the blend its characteristic green-tea flavour.',
-      details: 'Hand-selected leaves providing the crisp, foundational body of each steep without excessive bitterness when brewed with 85°C water.',
-      icon: '🍃',
-      notes: ['Earthy Base', 'Crisp Clean Finish', 'Subtle Vegetal Notes']
-    },
-    {
-      id: 'tulsi',
-      number: '02',
-      name: 'TULSI',
-      botanical: 'Ocimum tenuiflorum',
-      role: 'Aromatic Herb',
-      flavorAroma: 'Traditional Indian herb with a distinctive aromatic, peppery profile.',
-      details: 'A revered courtyard herb in Indian culture. Whole cut leaves impart a distinctive aromatic depth that gently balances the brisk green tea base.',
-      icon: '🌿',
-      notes: ['Peppery Undertone', 'Aromatic Sweetness', 'Warm Herbal Body']
-    },
-    {
-      id: 'lemongrass',
-      number: '03',
-      name: 'LEMONGRASS',
-      botanical: 'Cymbopogon citratus',
-      role: 'Citrus Brightness',
-      flavorAroma: 'Bright, fresh citrus-like aroma and flavour.',
-      details: 'Adds an uplifting, zesty fragrance to the steam and lightens the mouthfeel, creating an exceptionally clean and refreshing aftertaste.',
-      icon: '🍋',
-      notes: ['Citrus Zest', 'Bright Bouquet', 'Crisp Palate Cleanser']
-    },
-    {
-      id: 'ginger',
-      number: '04',
-      name: 'GINGER',
-      botanical: 'Zingiber officinale',
-      role: 'Warming Finish',
-      flavorAroma: 'Warm, mildly spicy note that gives the blend a rounded finish.',
-      details: 'Finely dried ginger root delivers a gentle, lingering warmth at the back of the throat that grounds the brighter citrus and tea notes.',
-      icon: '🫚',
-      notes: ['Mild Spice', 'Lingering Warmth', 'Rounded Finish']
-    }
-  ];
+const DEFAULT_INGREDIENTS = [
+  {
+    id: 'greentea',
+    number: '01',
+    name: 'GREEN TEA',
+    botanical: 'Camellia sinensis',
+    role: 'Tea Base',
+    flavorAroma: 'Fresh, slightly astringent tea base; gives the blend its characteristic green-tea flavour.',
+    details: 'Hand-selected leaves providing the crisp, foundational body of each steep without excessive bitterness when brewed with 85°C water.',
+    icon: '🍃',
+    notes: ['Earthy Base', 'Crisp Clean Finish', 'Subtle Vegetal Notes']
+  },
+  {
+    id: 'tulsi',
+    number: '02',
+    name: 'TULSI',
+    botanical: 'Ocimum tenuiflorum',
+    role: 'Aromatic Herb',
+    flavorAroma: 'Traditional Indian herb with a distinctive aromatic, peppery profile.',
+    details: 'A revered courtyard herb in Indian culture. Whole cut leaves impart a distinctive aromatic depth that gently balances the brisk green tea base.',
+    icon: '🌿',
+    notes: ['Peppery Undertone', 'Aromatic Sweetness', 'Warm Herbal Body']
+  },
+  {
+    id: 'lemongrass',
+    number: '03',
+    name: 'LEMONGRASS',
+    botanical: 'Cymbopogon citratus',
+    role: 'Citrus Brightness',
+    flavorAroma: 'Bright, fresh citrus-like aroma and flavour.',
+    details: 'Adds an uplifting, zesty fragrance to the steam and lightens the mouthfeel, creating an exceptionally clean and refreshing aftertaste.',
+    icon: '🍋',
+    notes: ['Citrus Zest', 'Bright Bouquet', 'Crisp Palate Cleanser']
+  },
+  {
+    id: 'ginger',
+    number: '04',
+    name: 'GINGER',
+    botanical: 'Zingiber officinale',
+    role: 'Warming Finish',
+    flavorAroma: 'Warm, mildly spicy note that gives the blend a rounded finish.',
+    details: 'Finely dried ginger root delivers a gentle, lingering warmth at the back of the throat that grounds the brighter citrus and tea notes.',
+    icon: '🫚',
+    notes: ['Mild Spice', 'Lingering Warmth', 'Rounded Finish']
+  }
+];
 
-  const current = ingredients.find(item => item.id === selectedId) || ingredients[0];
+export default function IngredientsBlend({ items }: IngredientsBlendProps = {}) {
+  const ingredients = items && items.length > 0
+    ? items.map((item, idx) => ({
+        id: item.id || `ing-${idx}`,
+        number: String(idx + 1).padStart(2, '0'),
+        name: item.name || '',
+        botanical: item.botanical_name || item.botanical || '',
+        role: item.role || item.percentage || 'Botanical',
+        flavorAroma: item.flavor_profile || item.flavorAroma || '',
+        details: item.description || item.details || '',
+        icon: item.icon || '🍃',
+        notes: Array.isArray(item.notes)
+          ? item.notes
+          : typeof item.notes === 'string'
+          ? item.notes.split(',').map((s: string) => s.trim()).filter(Boolean)
+          : []
+      }))
+    : DEFAULT_INGREDIENTS;
+
+  const [selectedId, setSelectedId] = useState<string>(ingredients[0]?.id || 'greentea');
+  const current = ingredients.find(item => item.id === selectedId) || ingredients[0] || DEFAULT_INGREDIENTS[0];
 
   return (
     <section id="blend" className="py-24 bg-[#0c1912] relative overflow-hidden">
@@ -182,7 +203,7 @@ export default function IngredientsBlend() {
                       Sensory Characteristics
                     </span>
                     <div className="flex flex-wrap gap-2">
-                      {current.notes.map((note) => (
+                      {current.notes.map((note: string) => (
                         <span 
                           key={note} 
                           className="text-xs bg-[#163322] border border-white/10 text-[#F8F6F2] px-3.5 py-1.5 rounded-full"

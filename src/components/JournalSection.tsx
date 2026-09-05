@@ -6,8 +6,32 @@ import { ArrowRight, Clock, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
-export default function JournalSection() {
-  const [selectedArticle, setSelectedArticle] = useState<JournalArticle | null>(null);
+interface JournalSectionProps {
+  articles?: any[];
+}
+
+export default function JournalSection({ articles: dynamicArticles }: JournalSectionProps = {}) {
+  const [selectedArticle, setSelectedArticle] = useState<any | null>(null);
+
+  const rawList = (dynamicArticles && dynamicArticles.length > 0)
+    ? dynamicArticles
+    : JOURNAL_ARTICLES;
+
+  const articles = rawList.slice(0, 4).map((art: any) => ({
+    id: art.id || art.slug,
+    slug: art.slug || art.id,
+    title: art.title,
+    excerpt: art.excerpt || '',
+    category: art.category || 'Mindful Living',
+    readTime: art.read_time || art.readTime || '4 min read',
+    date: art.date || (art.created_at ? new Date(art.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent'),
+    coverImage: art.image || art.coverImage || '/assets/ritual-planner-bg.jpg',
+    content: Array.isArray(art.content)
+      ? art.content
+      : typeof art.content === 'string'
+      ? art.content.split('\n\n').filter(Boolean)
+      : [art.excerpt || '']
+  }));
 
   return (
     <section id="journal" className="py-24 bg-[#0a150f] border-t border-white/5 relative">
@@ -38,7 +62,7 @@ export default function JournalSection() {
 
         {/* Article Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {JOURNAL_ARTICLES.map((article) => (
+          {articles.map((article) => (
             <article 
               key={article.id}
               onClick={() => setSelectedArticle(article)}
@@ -126,13 +150,22 @@ export default function JournalSection() {
                 </div>
 
                 <div className="border-t border-white/10 pt-6 space-y-4 text-sm text-slate-300 leading-relaxed font-sans">
-                  {selectedArticle.content.map((paragraph, i) => (
+                  {selectedArticle.content.map((paragraph: string, i: number) => (
                     <p key={i}>{paragraph}</p>
                   ))}
                 </div>
 
                 <div className="pt-6 border-t border-white/10 flex justify-between items-center text-xs text-slate-400">
-                  <span>Kindleaf Editorial</span>
+                  {selectedArticle.slug ? (
+                    <Link
+                      href={`/journal/${selectedArticle.slug}`}
+                      className="text-gold hover:underline font-semibold"
+                    >
+                      Open Full Page View →
+                    </Link>
+                  ) : (
+                    <span>Kindleaf Editorial</span>
+                  )}
                   <button
                     onClick={() => setSelectedArticle(null)}
                     className="text-gold hover:underline font-semibold cursor-pointer"

@@ -191,19 +191,39 @@
     "hero": {
       "tag": "🌿 100% Handcrafted & Natural",
       "heading": "Awaken Your Senses, Restore Your Calm",
-      "description": "A handcrafted herbal green tea made with green tea, tulsi, lemongrass and ginger — blended for a simple, mindful tea ritual.",
+      "description": "Kindleaf crafts artisanal Indian herbal green tea infused with whole holy basil, lemongrass, and ginger. Pure botanicals, mindful daily rituals, and honest Indian craftsmanship.",
       "primary_btn_text": "GET THE KINDLEAF APP",
-      "secondary_btn_text": "EXPLORE THE BLEND"
+      "primary_btn_link": "#get-the-app",
+      "secondary_btn_text": "EXPLORE THE BLEND",
+      "secondary_btn_link": "#blend",
+      "image": "/assets/hero_tea_cup.png"
     },
-    "why_kindleaf": {
+    "philosophy": {
+      "tag": "Our Philosophy",
+      "heading": "Nature in its Purest State",
+      "description": "We believe in the power of whole botanicals. Our leaves are carefully gathered and minimally processed to preserve their natural vitality and aroma.",
+      "pillar_1_title": "100% Whole Botanicals",
+      "pillar_1_desc": "Pure cut leaves and roots, never pulverized dust or artificial flavor sprays.",
+      "pillar_2_title": "Mindful Living",
+      "pillar_2_desc": "A warm cup that invites you to pause, breathe, and reclaim quiet clarity.",
+      "pillar_3_title": "Honest Heritage",
+      "pillar_3_desc": "Crafted in Jasrana, Uttar Pradesh, born from a soldier's home built on integrity."
+    },
+    "slow_living": {
       "tag": "Slow Living",
       "heading": "Not another notification. Not another deadline.",
-      "description": "We spend so much time taking care of everything around us that we often forget to recharge ourselves. Kindleaf is more than just green tea. It’s a mindful ritual, a warm cup in your hands, and a small pause that makes a big difference."
+      "description": "We spend so much time taking care of everything around us that we often forget to recharge ourselves. Kindleaf is more than just green tea. It's a mindful ritual, a warm cup in your hands, and a small pause that makes a big difference."
     },
-    "brewing_guide": {
-      "tag": "The Art of Tea",
-      "heading": "How to Brew the Perfect Cup",
-      "description": "A mindful brew unlocks the full botanical synergy of Green Tea, Tulsi, Lemongrass, and Ginger."
+    "featured_product": {
+      "product_id": "mock-natural-100",
+      "heading": "Our Signature Blend",
+      "description": "Available in single 50g packs and value duo combos exclusively via the Kindleaf App."
+    },
+    "cta_banner": {
+      "heading": "Experience the Kindleaf Ritual Today",
+      "description": "Download the Kindleaf App to order small-batch fresh harvests, access audio steeping guides, and track your mindful tea journey.",
+      "button_text": "GET THE KINDLEAF APP",
+      "button_link": "#get-the-app"
     }
   },
   "settings": {
@@ -246,5 +266,454 @@
       "mime_type": "image/png",
       "created_at": "2026-08-07T10:00:00Z"
     }
-  ]
+  ],
+  "journal_articles": [
+    {
+      "id": "art-1",
+      "slug": "art-of-slow-brewing",
+      "title": "The Art of Slow Brewing: Why Temperature and Patience Matter",
+      "category": "Brewing",
+      "readTime": "4 min read",
+      "author": "Kindleaf Herbalist",
+      "date": "August 2026",
+      "coverImage": "/assets/hero_tea_cup.png",
+      "excerpt": "Most people brew green tea with boiling water and wonder why it tastes harsh. Learn the science of gentle heat and why 85°C produces liquid gold.",
+      "content": [
+        "When hot water meets delicate whole-leaf green tea and botanicals, extraction begins within seconds. Standard commercial habits encourage pouring rolling boiling water (100°C) straight into a mug. However, at boiling point, bitter catechins and tannins rush out before sweet, delicate amino acids like L-theanine can balance the cup.",
+        "By keeping water temperature around 85°C—marked visually by small, energetic bubbles gathering at the bottom of the kettle—the green tea leaves unfurl gracefully without scorching.",
+        "Equally essential is steeping time. Allowing 3 to 5 minutes covered traps the natural aroma and volatile compounds from lemongrass and holy basil that would otherwise evaporate into thin air.",
+        "The result is a translucent amber-green infusion that carries bright citrus notes upfront, followed by an aromatic herbal middle and a comforting ginger warmth."
+      ],
+      "status": "published",
+      "seo_title": "The Art of Slow Brewing Green Tea | Kindleaf Journal",
+      "seo_description": "Learn how brewing green tea at 85°C preserves delicate L-theanine and essential aromas without bitterness."
+    },
+    {
+      "id": "art-2",
+      "slug": "botanical-synergy-tulsi-lemongrass",
+      "title": "Tulsi & Lemongrass: Botanical Aromas in Ancient and Modern Tea Traditions",
+      "category": "Herbal Ingredients",
+      "readTime": "5 min read",
+      "author": "Kindleaf Herbalist",
+      "date": "August 2026",
+      "coverImage": "/assets/product_natural.png",
+      "excerpt": "Exploring the centuries-old presence of Holy Basil (Tulsi) in Indian households and how crisp lemongrass elevates traditional green tea.",
+      "content": [
+        "In traditional Indian homes, Holy Basil (Ocimum tenuiflorum, commonly known as Tulsi) has held a cherished place in courtyard gardens for centuries. Known for its distinctively aromatic, peppery scent, Tulsi was traditionally plucked fresh and steeped into warm water during quiet dawn rituals.",
+        "When paired with lemongrass (Cymbopogon citratus), a fascinating sensory transition occurs. Lemongrass carries citral, which introduces a sparkling, clean citrus top note. This cuts through the astringency of traditional green tea and softens the herbal depth of Tulsi.",
+        "At Kindleaf, we hand-blend whole cut leaves rather than pulverizing them into dusty tea-bag powder. Whole botanicals retain their natural cell structures and fragrant oils until the moment hot water activates them in your cup."
+      ],
+      "status": "published",
+      "seo_title": "Tulsi & Lemongrass Botanical Synergy | Kindleaf",
+      "seo_description": "Discover how Holy Basil and fresh Lemongrass harmonize with green tea for an uplifting, mindful aroma."
+    },
+    {
+      "id": "art-3",
+      "slug": "reclaiming-ten-quiet-minutes",
+      "title": "Mindful Tea Rituals: Reclaiming Ten Quiet Minutes in a Noisy Day",
+      "category": "Tea Rituals",
+      "readTime": "3 min read",
+      "author": "Gaurav Singh",
+      "date": "July 2026",
+      "coverImage": "/assets/hero_tea_cup.png",
+      "excerpt": "A simple cup of tea can become an anchor in your day. Here is how to turn preparation into an intentional, grounding pause.",
+      "content": [
+        "We live in a world of constant pings, urgent notifications, and back-to-back demands. We frequently reach for caffeinated beverages while rushing between tasks, barely noticing what we are drinking.",
+        "A daily tea ritual is not about elaborate ceremonies or rigid rules. It is simply an agreement with yourself to pause for ten minutes.",
+        "Notice the visual unfurling of the leaves. Feel the comforting weight and warmth of the cup in both hands. Take three deliberate nasal breaths before the first sip.",
+        "These brief sensory anchors remind our nervous systems that between every demand, there is space to pause and restore calm."
+      ],
+      "status": "published",
+      "seo_title": "Mindful Tea Rituals: 10 Quiet Minutes | Kindleaf",
+      "seo_description": "Reclaim stillness in a busy day with a simple 10-minute tea ritual."
+    },
+    {
+      "id": "art-4",
+      "slug": "soldiers-home-story",
+      "title": "From a Soldier’s Home to Your Cup: The Kindleaf Journey",
+      "category": "Kindleaf Story",
+      "readTime": "5 min read",
+      "author": "Gaurav Singh",
+      "date": "July 2026",
+      "coverImage": "/assets/product_combo.png",
+      "excerpt": "How honest values, discipline, and a deep respect for natural ingredients shaped Kindleaf in Jasrana, Uttar Pradesh.",
+      "content": [
+        "Kindleaf was founded by Gaurav Singh, raised in a proud soldier’s family in Jasrana, Firozabad, Uttar Pradesh. In a home shaped by military discipline, honesty and accountability were foundational values.",
+        "When looking at the modern wellness market, it was frustrating to see shelves dominated by mass-produced teas sprayed with artificial flavoring agents and marketed with dubious miracle claims.",
+        "Kindleaf was created with a clear golden rule: 'If you can’t consume your own product every single day, you have no business selling it to others.'",
+        "From selecting green tea base, fragrant Holy Basil, crisp lemongrass, to real dried ginger root, every batch is prepared with pride, transparency, and care."
+      ],
+      "status": "published",
+      "seo_title": "The Kindleaf Story: Born in Jasrana | Kindleaf",
+      "seo_description": "The founding story of Kindleaf Herbal Green Tea, born in Jasrana from a soldier's home."
+    }
+  ],
+  "ingredients": [
+    {
+      "id": "ing-1",
+      "key": "greentea",
+      "number": "01",
+      "name": "GREEN TEA",
+      "botanical": "Camellia sinensis",
+      "role": "Tea Base",
+      "flavorAroma": "Fresh, slightly astringent tea base; gives the blend its characteristic green-tea flavour.",
+      "details": "Hand-selected leaves providing the crisp, foundational body of each steep without excessive bitterness when brewed with 85°C water.",
+      "icon": "🍃",
+      "notes": [
+        "Earthy Base",
+        "Crisp Clean Finish",
+        "Subtle Vegetal Notes"
+      ],
+      "image": "/assets/hero_tea_cup.png",
+      "display_order": 1,
+      "status": "published"
+    },
+    {
+      "id": "ing-2",
+      "key": "tulsi",
+      "number": "02",
+      "name": "TULSI",
+      "botanical": "Ocimum tenuiflorum",
+      "role": "Aromatic Herb",
+      "flavorAroma": "Traditional Indian herb with a distinctive aromatic, peppery profile.",
+      "details": "A revered courtyard herb in Indian culture. Whole cut leaves impart a distinctive aromatic depth that gently balances the brisk green tea base.",
+      "icon": "🌿",
+      "notes": [
+        "Peppery Undertone",
+        "Aromatic Sweetness",
+        "Warm Herbal Body"
+      ],
+      "image": "/assets/product_natural.png",
+      "display_order": 2,
+      "status": "published"
+    },
+    {
+      "id": "ing-3",
+      "key": "lemongrass",
+      "number": "03",
+      "name": "LEMONGRASS",
+      "botanical": "Cymbopogon citratus",
+      "role": "Citrus Brightness",
+      "flavorAroma": "Bright, fresh citrus-like aroma and flavour.",
+      "details": "Adds an uplifting, zesty fragrance to the steam and lightens the mouthfeel, creating an exceptionally clean and refreshing aftertaste.",
+      "icon": "🍋",
+      "notes": [
+        "Citrus Zest",
+        "Bright Bouquet",
+        "Crisp Palate Cleanser"
+      ],
+      "image": "/assets/product_combo.png",
+      "display_order": 3,
+      "status": "published"
+    },
+    {
+      "id": "ing-4",
+      "key": "ginger",
+      "number": "04",
+      "name": "GINGER",
+      "botanical": "Zingiber officinale",
+      "role": "Warming Finish",
+      "flavorAroma": "Warm, mildly spicy note that gives the blend a rounded finish.",
+      "details": "Finely dried ginger root delivers a gentle, lingering warmth at the back of the throat that grounds the brighter citrus and tea notes.",
+      "icon": "🫚",
+      "notes": [
+        "Mild Spice",
+        "Lingering Warmth",
+        "Rounded Finish"
+      ],
+      "image": "/assets/hero_tea_cup.png",
+      "display_order": 4,
+      "status": "published"
+    }
+  ],
+  "faqs": [
+    {
+      "id": "faq-1",
+      "question": "What is Kindleaf?",
+      "answer": "Kindleaf is an artisanal Indian herbal tea brand. Founded by Gaurav Singh from a soldier's family in Jasrana, Uttar Pradesh, we craft 100% natural herbal green tea blends designed for mindful daily tea rituals.",
+      "category": "General",
+      "display_order": 1,
+      "status": "published"
+    },
+    {
+      "id": "faq-2",
+      "question": "What ingredients are used in the blend?",
+      "answer": "Kindleaf contains exactly four natural botanicals: Green Tea Leaves (Camellia sinensis), Holy Basil / Tulsi (Ocimum tenuiflorum), Lemongrass (Cymbopogon citratus), and Dried Ginger Root (Zingiber officinale). There are no artificial flavours, sprays, or preservatives.",
+      "category": "Ingredients",
+      "display_order": 2,
+      "status": "published"
+    },
+    {
+      "id": "faq-3",
+      "question": "How should Kindleaf be brewed for optimal flavour?",
+      "answer": "Heat fresh water to approximately 85°C (bubbles forming gently, not a violent rolling boil). Add 1 teaspoon (about 2 grams) to your cup or infuser, pour the water, and steep covered for 3 to 5 minutes. Strain and sip mindfully.",
+      "category": "Brewing",
+      "display_order": 3,
+      "status": "published"
+    },
+    {
+      "id": "faq-4",
+      "question": "What does the blend taste like?",
+      "answer": "The blend offers a balanced, smooth flavour profile: fresh, crisp green tea with an uplifting citrus aroma from lemongrass, a fragrant peppery middle from Holy Basil, and a comforting warm finish from dry ginger.",
+      "category": "Ingredients",
+      "display_order": 4,
+      "status": "published"
+    },
+    {
+      "id": "faq-5",
+      "question": "Where can I purchase Kindleaf?",
+      "answer": "To ensure direct freshness and direct small-batch packaging, Kindleaf products are ordered exclusively through the official Kindleaf Mobile App for Android and iOS. This website is purely educational and does not process payments or orders directly.",
+      "category": "Ordering",
+      "display_order": 5,
+      "status": "published"
+    },
+    {
+      "id": "faq-6",
+      "question": "How does the Kindleaf App work?",
+      "answer": "The Kindleaf Mobile App allows you to order fresh batches directly, track small-batch dispatch in real time, access daily guided tea mindfulness timers, and receive notifications when limited seasonal harvests become available.",
+      "category": "Ordering",
+      "display_order": 6,
+      "status": "published"
+    },
+    {
+      "id": "faq-7",
+      "question": "Does Kindleaf contain caffeine?",
+      "answer": "Yes, because the base of our blend is natural Camellia sinensis (green tea leaves), it naturally contains a mild amount of caffeine (typically 20-30mg per cup, roughly one-third of a cup of coffee). It is paired with calming herbs like Tulsi for a steady, jitter-free tea moment.",
+      "category": "Ingredients",
+      "display_order": 7,
+      "status": "published"
+    },
+    {
+      "id": "faq-8",
+      "question": "What is the shelf life and how should it be stored?",
+      "answer": "Kindleaf tea retains its optimal aromatic freshness for 12 months from the packaging date. Keep the pouch tightly sealed in a cool, dry place away from direct sunlight, moisture, and strong spices.",
+      "category": "General",
+      "display_order": 8,
+      "status": "published"
+    }
+  ],
+  "offers": [
+    {
+      "id": "off-1",
+      "title": "Direct Small-Batch Harvest Drops",
+      "description": "Order freshly dried batches directly from our kitchen in Jasrana via the Kindleaf App.",
+      "image": "/assets/product_natural.png",
+      "cta_text": "GET THE KINDLEAF APP",
+      "cta_link": "#get-the-app",
+      "start_date": "2026-08-01",
+      "end_date": "2026-12-31",
+      "active": true,
+      "priority": 1,
+      "status": "published"
+    }
+  ],
+  "brewing_guide": {
+    "title": "The Art of Mindful Steeping",
+    "intro": "Steeping tea is not merely waiting; it is an intentional ritual of presence. Follow these four simple steps to unlock the full botanical synergy of Green Tea, Tulsi, Lemongrass, and Ginger.",
+    "serving_size": "1 teaspoon (~2g)",
+    "water_temp": "Approx. 85°C (gentle bubbles, not boiling)",
+    "steep_time": "3 to 5 minutes covered",
+    "tips": "Covering your cup while steeping traps volatile botanical aromas that would otherwise escape.",
+    "audio_url": "/audio/brewing-ambient.mpeg",
+    "steps": [
+      {
+        "num": "01",
+        "title": "Heat Water to ~85°C",
+        "summary": "Bring fresh water to a gentle bubble, not a violent rolling boil. Overly hot water scorches delicate green tea leaves, masking subtle citrus and floral notes.",
+        "duration": "1 min"
+      },
+      {
+        "num": "02",
+        "title": "Measure 1 Teaspoon (~2g)",
+        "summary": "Place one teaspoon of whole cut Kindleaf botanicals into your strainer or favorite infuser mug.",
+        "duration": "30 sec"
+      },
+      {
+        "num": "03",
+        "title": "Steep Covered for 3–5 Mins",
+        "summary": "Pour hot water and cover immediately. Covering traps the precious natural aromas of holy basil and lemongrass inside your cup.",
+        "duration": "3-5 mins"
+      },
+      {
+        "num": "04",
+        "title": "Strain, Inhale & Sip Mindfully",
+        "summary": "Remove leaves. Pause and feel the warmth of the ceramic cup. Inhale the steam, take your first gentle sip, and restore calm.",
+        "duration": "Mindful pause"
+      }
+    ]
+  },
+  "our_story": {
+    "tag": "Our Roots & Heritage",
+    "heading": "A Small Dream from a Soldier’s Home",
+    "story_p1": "Kindleaf did not begin in a corporate boardroom or an industrial processing plant. It was born right at home in Jasrana, Firozabad, Uttar Pradesh, founded by Gaurav Singh, coming from a proud soldier’s family.",
+    "story_p2": "Growing up in a home anchored in discipline and integrity, honesty was non-negotiable. When observing the commercial tea industry, it was clear that many shelves were filled with artificial flavorings, synthetic sprays, and hollow marketing promises.",
+    "story_p3": "Kindleaf was created with an unwavering commitment: craft a tea blend that is 100% natural, using pure whole green tea leaves, aromatic holy basil (Tulsi), zesty lemongrass, and warming dried ginger. Each batch is blended and packaged in small quantities with meticulous care.",
+    "founder_quote": "I strongly believe in one principle: If you can’t consume your own product every day, you probably shouldn’t be selling it. At Kindleaf, we drink the exact same tea we ship to you.",
+    "founder_name": "Gaurav Singh, Founder",
+    "badges": [
+      {
+        "top": "100%",
+        "label": "Pure & Natural",
+        "sub": "No artificial oils, sprays, or chemicals"
+      },
+      {
+        "top": "FSSAI",
+        "label": "Licensed Food Business",
+        "sub": "Food safety standards compliant"
+      },
+      {
+        "top": "Handcrafted",
+        "label": "Small-Batch Blended",
+        "sub": "Prepared with precision and pride"
+      },
+      {
+        "top": "India",
+        "label": "Made in India",
+        "sub": "Jasrana, Firozabad, Uttar Pradesh"
+      }
+    ]
+  },
+  "legal_content": {
+    "privacy_policy": {
+      "last_updated": "August 2026",
+      "sections": [
+        {
+          "title": "1. Informational Website",
+          "content": "This website does not store checkout payment details or process credit card transactions. We do not sell or trade personal data to third-party marketing brokers."
+        },
+        {
+          "title": "2. Contact Messages",
+          "content": "When you submit an inquiry through our Contact Desk, your email and message are used solely to communicate with you and answer your questions."
+        },
+        {
+          "title": "3. Mobile Application Data",
+          "content": "Shipping and delivery details collected in the Kindleaf Mobile App are processed strictly for order fulfillment and courier tracking in India."
+        },
+        {
+          "title": "4. Information We Collect",
+          "content": "We may collect limited personal information that you voluntarily provide when interacting with Kindleaf. This may include your name, email address, phone number, shipping address, and any message or information you submit through our Contact Desk or other communication channels. We collect only the information reasonably necessary to provide our products, services, and customer support."
+        },
+        {
+          "title": "5. Cookies & Website Analytics",
+          "content": "The Kindleaf website may use cookies or similar technologies to support website functionality, understand website usage, and improve the user experience. You may manage or disable cookies through your browser settings. Currently, this informational website does not deploy advertising tracking pixels or third-party marketing trackers."
+        },
+        {
+          "title": "6. Third-Party Services",
+          "content": "Kindleaf may use trusted third-party service providers to support hosting, courier delivery, order tracking, and customer support. These providers receive only the information reasonably necessary to perform their respective services. Kindleaf does not sell or trade personal information to marketing brokers."
+        },
+        {
+          "title": "7. Data Retention",
+          "content": "We retain personal information only for as long as reasonably necessary to provide services, fulfil customer orders, respond to enquiries, and meet applicable legal or regulatory requirements."
+        },
+        {
+          "title": "8. Contact for Privacy Questions",
+          "content": "If you have questions, concerns, or requests regarding this Privacy Policy, please contact us at support@kindleaf.in."
+        }
+      ]
+    },
+    "terms_conditions": {
+      "last_updated": "August 2026",
+      "sections": [
+        {
+          "title": "1. Purpose of the Website",
+          "content": "This website serves as the official brand, educational, and product information hub. All purchasing, shopping cart management, and order placement take place within the Kindleaf Mobile App."
+        },
+        {
+          "title": "2. Intellectual Property",
+          "content": "All editorial copy, photography, botanical guides, and trademarks are owned by Kindleaf. Unauthorized reproduction or commercial distribution is prohibited."
+        },
+        {
+          "title": "3. Compliance & Standards",
+          "content": "Our tea blends comply with applicable food safety standards and are handcrafted in Jasrana, Firozabad, Uttar Pradesh, India."
+        }
+      ]
+    },
+    "shipping_policy": {
+      "last_updated": "August 2026",
+      "sections": [
+        {
+          "title": "Overview",
+          "content": "All product shipments are initiated through orders confirmed inside the Kindleaf Mobile App. Kindleaf operates in accordance with applicable food safety and regulatory requirements. Our tea blends are handcrafted in Jasrana, Firozabad, Uttar Pradesh, India."
+        },
+        {
+          "title": "1. Small-Batch Fulfillment",
+          "content": "To maintain optimal botanical freshness, we prepare our blends in small batches. Orders are packed and dispatched within 24–48 hours of confirmation."
+        },
+        {
+          "title": "2. Delivery Timeframes",
+          "content": "Standard courier delivery across India typically takes 3 to 7 business days depending on location. Tracking information, where available, can be accessed through the Kindleaf App."
+        }
+      ]
+    },
+    "refund_policy": {
+      "last_updated": "August 2026",
+      "sections": [
+        {
+          "title": "Overview",
+          "content": "As herbal tea is a consumable food product, returns are handled with care to ensure hygiene and food safety."
+        },
+        {
+          "title": "1. Damaged or Incorrect Packages",
+          "content": "If a package arrives damaged, torn, or with an incorrect variant, please report it within 48 hours of delivery via the Kindleaf App support desk or email support@kindleaf.in with photos of the package."
+        },
+        {
+          "title": "2. Resolution",
+          "content": "Verified claims are eligible for a replacement dispatch or a full refund to the original payment source within 5–7 business days."
+        }
+      ]
+    },
+    "medical_disclaimer": {
+      "last_updated": "August 2026",
+      "sections": [
+        {
+          "title": "Important Health Notice",
+          "content": "Kindleaf Herbal Green Tea is a handcrafted natural beverage made with green tea, holy basil (Tulsi), lemongrass, and dry ginger. It is crafted as a refreshing herbal beverage for mindful daily rituals."
+        },
+        {
+          "title": "1. Not Medical Advice",
+          "content": "Information presented on this website, including the interactive Daily Tea Routine Planner, is strictly for educational and lifestyle mindfulness purposes. It does not constitute medical advice, Ayurvedic prescriptions, diagnosis, treatment, or health prevention."
+        },
+        {
+          "title": "2. No Medical Claims",
+          "content": "We do not claim that Kindleaf treats, cures, or prevents any disease or illness. Always consult a qualified healthcare provider if you have underlying medical conditions, are pregnant or nursing, or are taking prescription medications."
+        }
+      ]
+    }
+  },
+  "seo_settings": {
+    "home": {
+      "title": "Kindleaf | Handcrafted Herbal Green Tea",
+      "description": "Artisanal Indian herbal green tea infused with holy basil (Tulsi), lemongrass, and ginger. 100% natural, handcrafted in Jasrana for mindful daily rituals.",
+      "og_image": "/assets/hero_tea_cup.png",
+      "canonical": "https://kindleaf.in",
+      "indexable": true
+    },
+    "journal": {
+      "title": "Journal & Herbal Insights | Kindleaf Official",
+      "description": "Thoughtful essays and guides on the botanical harmony of holy basil and lemongrass, the art of mindful steeping, and slow living.",
+      "og_image": "/assets/hero_tea_cup.png",
+      "canonical": "https://kindleaf.in/journal",
+      "indexable": true
+    },
+    "legal": {
+      "title": "Legal & Compliance Hub | Kindleaf Official",
+      "description": "Official transparency, compliance, privacy, terms, and food safety policies for Kindleaf.",
+      "og_image": "/assets/hero_tea_cup.png",
+      "canonical": "https://kindleaf.in/legal",
+      "indexable": true
+    }
+  },
+  "app_settings": {
+    "app_name": "Kindleaf: Handcrafted Herbal Tea",
+    "deep_link": "kindleaf://open",
+    "play_store_url": "https://play.google.com/store/apps/details?id=in.kindleaf.app",
+    "app_store_url": "https://apps.apple.com/app/kindleaf-herbal-tea/id123456789",
+    "default_cta": "GET THE KINDLEAF APP"
+  },
+  "social_links": {
+    "facebook_url": "https://www.facebook.com/share/1EELT4gBjW/",
+    "instagram_url": "https://instagram.com/kindleaf.wellness",
+    "youtube_url": "",
+    "whatsapp_phone": "916396461480"
+  }
 }

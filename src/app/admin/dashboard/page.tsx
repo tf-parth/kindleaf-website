@@ -2,68 +2,81 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  LayoutDashboard, ShoppingBasket, FileText, Users, MessageSquare, 
-  Home, Image, Settings, LogOut, Search, Bell, User, Plus, 
-  Edit, Trash2, Check, X, ShieldAlert, Upload, Globe, Link, ArrowDown, Eye
+  LayoutDashboard, ShoppingBasket, FileText, Image as ImageIcon, 
+  Tag, Home, Sparkles, Clock, HelpCircle, BookOpen, Scale, 
+  Search, Globe, Smartphone, Share2, LogOut, Menu, X, Plus, 
+  Edit, Trash2, Check, ExternalLink, Eye, Upload, Music, 
+  AlertTriangle, CheckCircle2, ChevronRight, Copy, ArrowUpRight
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export default function AdminDashboard() {
   const router = useRouter();
-  
+
   // Auth state
   const [adminUser, setAdminUser] = useState<any>(null);
-  
+
   // Active module tab
-  const [activeTab, setActiveTab] = useState('dashboard');
-  
-  // Data lists
+  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Toast notification state
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  // Data Collections
   const [products, setProducts] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [media, setMedia] = useState<any[]>([]);
-  const [homepageContent, setHomepageContent] = useState<any>({
-    hero: { tag: "", heading: "", description: "", primary_btn_text: "", secondary_btn_text: "" },
-    why_kindleaf: { tag: "", heading: "", description: "" },
-    brewing_guide: { tag: "", heading: "", description: "" }
-  });
-  const [globalSettings, setGlobalSettings] = useState<any>({
-    website_name: "", contact_email: "", contact_phone: "", address: "", 
-    instagram_url: "", facebook_url: "", whatsapp_phone: "", amazon_store_url: "",
-    seo_title: "", seo_description: ""
-  });
+  const [journalArticles, setJournalArticles] = useState<any[]>([]);
+  const [mediaItems, setMediaItems] = useState<any[]>([]);
+  const [offers, setOffers] = useState<any[]>([]);
+  const [ingredients, setIngredients] = useState<any[]>([]);
+  const [faqs, setFaqs] = useState<any[]>([]);
+  const [homepageContent, setHomepageContent] = useState<any>({});
+  const [brewingGuide, setBrewingGuide] = useState<any>({});
+  const [ourStory, setOurStory] = useState<any>({});
+  const [legalContent, setLegalContent] = useState<any>({});
+  const [seoSettings, setSeoSettings] = useState<any>({});
+  const [appSettings, setAppSettings] = useState<any>({});
+  const [socialLinks, setSocialLinks] = useState<any>({});
 
-  // UI state variables
+  // Search & Filter states
   const [searchQuery, setSearchQuery] = useState('');
-  const [notifications, setNotifications] = useState<any[]>([
-    { id: 1, text: "New Order #ord-2 pending review", time: "2 hours ago", read: false },
-    { id: 2, text: "New review submitted by Vikram", time: "1 day ago", read: true }
-  ]);
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
+  const [mediaTypeFilter, setMediaTypeFilter] = useState<'all' | 'image' | 'audio'>('all');
 
-  // CRUD Overlay Modals
+  // Modal states
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; title: string; onConfirm: () => void } | null>(null);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const [mediaPickerCallback, setMediaPickerCallback] = useState<((url: string) => void) | null>(null);
+  const [previewModal, setPreviewModal] = useState<{ open: boolean; type: string; data: any } | null>(null);
+
+  // Editing Modals
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [productForm, setProductForm] = useState<any>({
-    title: "", slug: "", description: "", short_description: "", price: 0, sale_price: 0,
-    stock: 100, sku: "", weight: "100g", category: "Herbal Green Tea", 
-    benefits: ["", "", ""], ingredients: ["", "", "", ""], 
-    brewing_instructions: ["", "", "", ""], amazon_url: "", img: "", status: "published",
-    featured: false, seo_title: "", seo_description: ""
-  });
 
-  const [orderModalOpen, setOrderModalOpen] = useState(false);
-  const [activeOrder, setActiveOrder] = useState<any>(null);
-  
-  // Media Drag-Drop simulated upload
+  const [journalModalOpen, setJournalModalOpen] = useState(false);
+  const [editingJournal, setEditingJournal] = useState<any>(null);
+
+  const [offerModalOpen, setOfferModalOpen] = useState(false);
+  const [editingOffer, setEditingOffer] = useState<any>(null);
+
+  const [ingredientModalOpen, setIngredientModalOpen] = useState(false);
+  const [editingIngredient, setEditingIngredient] = useState<any>(null);
+
+  const [faqModalOpen, setFaqModalOpen] = useState(false);
+  const [editingFaq, setEditingFaq] = useState<any>(null);
+
+  // File Upload Ref
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
-  // 1. Verify Auth status
+  // 1. Verify Auth
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const mockSession = localStorage.getItem('admin_session');
@@ -85,1267 +98,2314 @@ export default function AdminDashboard() {
     }
   }, [router]);
 
-  // 2. Fetch all lists
-  const refreshData = () => {
-    fetch('/api/products').then(res => res.json()).then(data => setProducts(data));
-    fetch('/api/orders').then(res => res.json()).then(data => setOrders(data));
-    fetch('/api/customers').then(res => res.json()).then(data => setCustomers(data));
-    fetch('/api/reviews').then(res => res.json()).then(data => setReviews(data));
-    fetch('/api/media').then(res => res.json()).then(data => setMedia(data));
-    
-    fetch('/api/homepage').then(res => res.json()).then(data => {
-      if (data && Object.keys(data).length > 0) setHomepageContent(data);
-    });
-    
-    fetch('/api/settings').then(res => res.json()).then(data => {
-      if (data && Object.keys(data).length > 0) setGlobalSettings(data);
-    });
+  // 2. Load all CMS data
+  const loadAllData = async () => {
+    try {
+      const [
+        prodRes, journalRes, mediaRes, offerRes, ingRes,
+        faqRes, homeRes, brewRes, storyRes, legalRes,
+        seoRes, appRes, socialRes
+      ] = await Promise.all([
+        fetch('/api/products').then(r => r.json()).catch(() => []),
+        fetch('/api/journal?all=true').then(r => r.json()).catch(() => []),
+        fetch('/api/media').then(r => r.json()).catch(() => []),
+        fetch('/api/offers?all=true').then(r => r.json()).catch(() => []),
+        fetch('/api/ingredients?all=true').then(r => r.json()).catch(() => []),
+        fetch('/api/faqs?all=true').then(r => r.json()).catch(() => []),
+        fetch('/api/homepage').then(r => r.json()).catch(() => ({})),
+        fetch('/api/brewing').then(r => r.json()).catch(() => ({})),
+        fetch('/api/story').then(r => r.json()).catch(() => ({})),
+        fetch('/api/legal').then(r => r.json()).catch(() => ({})),
+        fetch('/api/seo').then(r => r.json()).catch(() => ({})),
+        fetch('/api/settings').then(r => r.json()).then(d => d?.app_settings || {}).catch(() => ({})),
+        fetch('/api/settings').then(r => r.json()).then(d => d?.social_links || {}).catch(() => ({}))
+      ]);
+
+      if (Array.isArray(prodRes)) setProducts(prodRes);
+      if (Array.isArray(journalRes)) setJournalArticles(journalRes);
+      if (Array.isArray(mediaRes)) setMediaItems(mediaRes);
+      if (Array.isArray(offerRes)) setOffers(offerRes);
+      if (Array.isArray(ingRes)) setIngredients(ingRes);
+      if (Array.isArray(faqRes)) setFaqs(faqRes);
+      if (homeRes) setHomepageContent(homeRes);
+      if (brewRes) setBrewingGuide(brewRes);
+      if (storyRes) setOurStory(storyRes);
+      if (legalRes) setLegalContent(legalRes);
+      if (seoRes) setSeoSettings(seoRes);
+      if (appRes) setAppSettings(appRes);
+      if (socialRes) setSocialLinks(socialRes);
+    } catch (err) {
+      console.error('Error loading CMS data:', err);
+    }
   };
 
   useEffect(() => {
-    if (adminUser) {
-      refreshData();
-    }
-  }, [adminUser]);
+    loadAllData();
+  }, []);
 
-  // Log Out
+  // Handle Logout
   const handleLogout = async () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('admin_session');
+    }
     if (isSupabaseConfigured && supabase) {
       await supabase.auth.signOut();
     }
-    localStorage.removeItem('admin_session');
     router.push('/admin/login');
   };
 
-  // =========================================================
-  // PRODUCTS CRUD HANDLERS
-  // =========================================================
-  const openProductForm = (product: any = null) => {
-    if (product) {
-      setEditingProduct(product);
-      setProductForm({
-        ...product,
-        benefits: Array.isArray(product.benefits) ? [...product.benefits] : ["", "", ""],
-        ingredients: Array.isArray(product.ingredients) ? [...product.ingredients] : ["", "", "", ""],
-        brewing_instructions: Array.isArray(product.brewing_instructions) ? [...product.brewing_instructions] : ["", "", "", ""]
-      });
-    } else {
-      setEditingProduct(null);
-      setProductForm({
-        title: "", slug: "", description: "", short_description: "", price: 249, sale_price: 350,
-        stock: 100, sku: "", weight: "100g", category: "Herbal Green Tea", 
-        benefits: ["", "", ""], ingredients: ["", "", "", ""], 
-        brewing_instructions: ["", "", "", ""], amazon_url: "", img: "", status: "published",
-        featured: false, seo_title: "", seo_description: ""
-      });
-    }
-    setProductModalOpen(true);
+  // Open Media Picker Helper
+  const openMediaPicker = (callback: (url: string) => void) => {
+    setMediaPickerCallback(() => callback);
+    setMediaPickerOpen(true);
   };
 
-  const handleProductSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const payload = {
-      ...productForm,
-      id: editingProduct ? editingProduct.id : undefined
-    };
-
-    fetch('/api/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-      .then(res => res.json())
-      .then(() => {
-        setProductModalOpen(false);
-        refreshData();
-      });
-  };
-
-  const handleDeleteProduct = (id: string) => {
-    if (confirm('Are you sure you want to delete this product?')) {
-      fetch(`/api/products?id=${id}`, { method: 'DELETE' })
-        .then(res => res.json())
-        .then(() => refreshData());
-    }
-  };
-
-  const toggleProductStatus = (product: any) => {
-    const nextStatus = product.status === 'published' ? 'hidden' : 'published';
-    fetch('/api/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...product, status: nextStatus })
-    }).then(() => refreshData());
-  };
-
-  // =========================================================
-  // ORDERS HANDLERS
-  // =========================================================
-  const updateStatus = (orderId: string, nextStatus: string) => {
-    fetch('/api/orders/status', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: orderId, status: nextStatus })
-    }).then(() => refreshData());
-  };
-
-  // =========================================================
-  // REVIEWS HANDLERS
-  // =========================================================
-  const toggleReviewFlag = (reviewId: string, field: 'approved' | 'featured', val: boolean) => {
-    fetch('/api/reviews', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: reviewId, field, value: val })
-    }).then(() => refreshData());
-  };
-
-  const handleDeleteReview = (id: string) => {
-    if (confirm('Delete this review?')) {
-      fetch(`/api/reviews?id=${id}`, { method: 'DELETE' })
-        .then(() => refreshData());
-    }
-  };
-
-  // =========================================================
-  // HOMEPAGE & SETTINGS HANDLERS
-  // =========================================================
-  const saveHomepageConfig = (sectionKey: string, content: any) => {
-    fetch('/api/homepage', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: sectionKey, content })
-    })
-      .then(res => res.json())
-      .then(() => {
-        alert('Homepage updated successfully!');
-        refreshData();
-      });
-  };
-
-  const saveSettingsConfig = (key: string, value: any) => {
-    fetch('/api/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key, value })
-    })
-      .then(res => res.json())
-      .then(() => {
-        alert('Settings updated successfully!');
-        refreshData();
-      });
-  };
-
-  // =========================================================
-  // MEDIA LIBRARY HANDLERS
-  // =========================================================
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // File Upload Handler
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, category = 'General') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('category', category);
 
-    fetch('/api/media/upload', {
-      method: 'POST',
-      body: formData
-    })
-      .then(res => res.json())
-      .then(() => {
-        refreshData();
-      })
-      .finally(() => {
-        setUploading(false);
+    try {
+      const res = await fetch('/api/media/upload', {
+        method: 'POST',
+        body: formData
       });
-  };
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
 
-  const handleDeleteMedia = (id: string) => {
-    if (confirm('Delete this media asset?')) {
-      fetch(`/api/media?id=${id}`, { method: 'DELETE' })
-        .then(() => refreshData());
+      setMediaItems(prev => [data, ...prev]);
+      showToast(`Uploaded ${file.name} successfully!`);
+
+      if (mediaPickerCallback) {
+        mediaPickerCallback(data.url);
+        setMediaPickerOpen(false);
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Upload error', 'error');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  // Filter calculations
-  const totalRev = orders.filter(o => o.status === 'delivered').reduce((acc, o) => acc + o.total_price, 0);
-
-  if (!adminUser) return null;
+  // Navigation Items
+  const navSections = [
+    {
+      group: "OVERVIEW",
+      items: [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }
+      ]
+    },
+    {
+      group: "CATALOG & CONTENT",
+      items: [
+        { id: 'products', label: 'Products', icon: ShoppingBasket, count: products.length },
+        { id: 'journal', label: 'Journal / Blogs', icon: FileText, count: journalArticles.length },
+        { id: 'ingredients', label: 'Botanicals', icon: Sparkles, count: ingredients.length },
+        { id: 'offers', label: 'Offers & Banners', icon: Tag, count: offers.length }
+      ]
+    },
+    {
+      group: "WEBSITE SECTIONS",
+      items: [
+        { id: 'homepage', label: 'Homepage', icon: Home },
+        { id: 'brewing', label: 'Brewing Guide', icon: Clock },
+        { id: 'story', label: 'Our Story', icon: BookOpen },
+        { id: 'faqs', label: 'FAQs', icon: HelpCircle, count: faqs.length },
+        { id: 'legal', label: 'Legal Hub', icon: Scale }
+      ]
+    },
+    {
+      group: "ASSETS & CONFIG",
+      items: [
+        { id: 'media', label: 'Media Library', icon: ImageIcon, count: mediaItems.length },
+        { id: 'seo', label: 'SEO Metadata', icon: Globe },
+        { id: 'app', label: 'App Settings', icon: Smartphone },
+        { id: 'social', label: 'Social Links', icon: Share2 }
+      ]
+    }
+  ];
 
   return (
-    <div className="flex min-h-screen bg-[#08100b] text-slate-200">
+    <div className="min-h-screen bg-[#08120c] text-slate-200 font-sans flex flex-col lg:flex-row antialiased">
       
-      {/* SIDEBAR NAVIGATION */}
-      <aside className="w-64 bg-[#0a150f] border-r border-white/5 flex flex-col justify-between shrink-0">
-        <div>
-          {/* Logo signature */}
-          <div className="p-6 border-b border-white/5 flex items-center gap-3">
-            <img src="/assets/logo.png" alt="Logo" className="h-9 w-auto rounded" />
-            <div>
-              <span className="font-serif font-bold text-sm block tracking-wide text-gold">KINDLEAF</span>
-              <span className="text-[9px] uppercase tracking-wider text-slate-500 font-bold block -mt-1">Admin Panel</span>
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className={`fixed top-5 right-5 z-50 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 border text-xs font-medium ${
+              toast.type === 'error' 
+                ? 'bg-red-950/90 border-red-700 text-red-200' 
+                : 'bg-[#163322]/95 border-gold/40 text-gold'
+            }`}
+          >
+            {toast.type === 'error' ? <AlertTriangle size={16} /> : <CheckCircle2 size={16} />}
+            <span>{toast.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Hidden File Input for Quick Uploads */}
+      <input 
+        ref={fileInputRef} 
+        type="file" 
+        className="hidden" 
+        accept="image/*,audio/*" 
+        onChange={(e) => handleFileUpload(e)}
+      />
+
+      {/* Mobile Header */}
+      <header className="lg:hidden bg-[#0c1912] border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 z-30">
+        <div className="flex items-center gap-3">
+          <img src="/assets/logo.png" alt="Kindleaf" className="h-8 w-auto rounded" />
+          <span className="font-serif font-bold text-sm text-[#F8F6F2]">Kindleaf CMS</span>
+        </div>
+        <button 
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="p-2 rounded-lg bg-white/5 border border-white/10 text-slate-300 hover:text-white"
+        >
+          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </header>
+
+      {/* Sidebar Navigation */}
+      <aside className={`fixed inset-y-0 left-0 z-40 w-72 bg-[#0c1912] border-r border-white/10 flex flex-col justify-between transition-transform duration-300 lg:static lg:translate-x-0 ${
+        mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="flex flex-col h-full">
+          {/* Brand header */}
+          <div className="p-6 border-b border-white/10 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <img src="/assets/logo.png" alt="Kindleaf" className="h-9 w-auto rounded shadow" />
+              <div>
+                <h1 className="font-serif font-bold text-sm text-[#F8F6F2] leading-none">Kindleaf CMS</h1>
+                <span className="text-[10px] text-gold tracking-widest uppercase font-semibold block mt-1">Content Manager</span>
+              </div>
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="p-4 space-y-1.5 text-xs font-semibold">
-            <button 
-              onClick={() => { setActiveTab('dashboard'); setSearchQuery(''); }}
-              className={`w-full flex items-center gap-3.5 px-4.5 py-3 rounded-lg transition-colors text-left ${activeTab === 'dashboard' ? 'bg-[#163322] text-gold border border-gold/10' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
-            >
-              <LayoutDashboard size={16} />
-              <span>Dashboard</span>
-            </button>
-            <button 
-              onClick={() => { setActiveTab('products'); setSearchQuery(''); }}
-              className={`w-full flex items-center gap-3.5 px-4.5 py-3 rounded-lg transition-colors text-left ${activeTab === 'products' ? 'bg-[#163322] text-gold border border-gold/10' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
-            >
-              <ShoppingBasket size={16} />
-              <span>Products</span>
-            </button>
-            <button 
-              onClick={() => { setActiveTab('orders'); setSearchQuery(''); }}
-              className={`w-full flex items-center gap-3.5 px-4.5 py-3 rounded-lg transition-colors text-left ${activeTab === 'orders' ? 'bg-[#163322] text-gold border border-gold/10' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
-            >
-              <FileText size={16} />
-              <span>Orders</span>
-            </button>
-            <button 
-              onClick={() => { setActiveTab('customers'); setSearchQuery(''); }}
-              className={`w-full flex items-center gap-3.5 px-4.5 py-3 rounded-lg transition-colors text-left ${activeTab === 'customers' ? 'bg-[#163322] text-gold border border-gold/10' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
-            >
-              <Users size={16} />
-              <span>Customers</span>
-            </button>
-            <button 
-              onClick={() => { setActiveTab('reviews'); setSearchQuery(''); }}
-              className={`w-full flex items-center gap-3.5 px-4.5 py-3 rounded-lg transition-colors text-left ${activeTab === 'reviews' ? 'bg-[#163322] text-gold border border-gold/10' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
-            >
-              <MessageSquare size={16} />
-              <span>Reviews</span>
-            </button>
-            <button 
-              onClick={() => { setActiveTab('homepage'); setSearchQuery(''); }}
-              className={`w-full flex items-center gap-3.5 px-4.5 py-3 rounded-lg transition-colors text-left ${activeTab === 'homepage' ? 'bg-[#163322] text-gold border border-gold/10' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
-            >
-              <Home size={16} />
-              <span>Homepage</span>
-            </button>
-            <button 
-              onClick={() => { setActiveTab('media'); setSearchQuery(''); }}
-              className={`w-full flex items-center gap-3.5 px-4.5 py-3 rounded-lg transition-colors text-left ${activeTab === 'media' ? 'bg-[#163322] text-gold border border-gold/10' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
-            >
-              <Image size={16} />
-              <span>Media Library</span>
-            </button>
-            <button 
-              onClick={() => { setActiveTab('settings'); setSearchQuery(''); }}
-              className={`w-full flex items-center gap-3.5 px-4.5 py-3 rounded-lg transition-colors text-left ${activeTab === 'settings' ? 'bg-[#163322] text-gold border border-gold/10' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}`}
-            >
-              <Settings size={16} />
-              <span>Settings</span>
-            </button>
+          {/* Nav items list */}
+          <nav className="flex-1 overflow-y-auto p-4 space-y-6">
+            {navSections.map(section => (
+              <div key={section.group} className="space-y-1">
+                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider px-3 mb-1 block">
+                  {section.group}
+                </span>
+                {section.items.map(item => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
+                        isActive 
+                          ? 'bg-gold text-[#0c1912] font-semibold shadow-md' 
+                          : 'text-slate-300 hover:bg-[#163322]/40 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon size={16} className={isActive ? 'text-[#0c1912]' : 'text-gold'} />
+                        <span>{item.label}</span>
+                      </div>
+                      {item.count !== undefined && (
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                          isActive ? 'bg-[#0c1912]/20 text-[#0c1912]' : 'bg-white/5 text-slate-400'
+                        }`}>
+                          {item.count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
-        </div>
 
-        {/* Logout bottom */}
-        <div className="p-4 border-t border-white/5">
-          <button 
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3.5 px-4.5 py-3.5 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-300 transition-colors text-xs font-semibold text-left"
-          >
-            <LogOut size={16} />
-            <span>Logout</span>
-          </button>
+          {/* User profile & actions footer */}
+          <div className="p-4 border-t border-white/10 bg-[#0a150f] space-y-2">
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-gold hover:bg-white/5 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <ExternalLink size={14} />
+                <span>View Live Website</span>
+              </div>
+              <ArrowUpRight size={12} className="text-gold" />
+            </a>
+
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+            >
+              <LogOut size={14} />
+              <span>Sign Out</span>
+            </button>
+          </div>
         </div>
       </aside>
 
-      {/* MAIN CONTAINER */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      {/* Main Content Area */}
+      <main className="flex-1 min-w-0 overflow-y-auto p-6 sm:p-8 lg:p-10 space-y-8">
         
-        {/* TOP BAR */}
-        <header className="h-16 bg-[#0a150f] border-b border-white/5 flex items-center justify-between px-8 shrink-0 relative z-30">
-          
-          {/* Search bar */}
-          <div className="relative w-80">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
-              <Search size={14} />
-            </span>
-            <input 
-              type="text" 
-              placeholder={`Search ${activeTab}...`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-black/20 border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-gold/30 placeholder-slate-600"
-            />
-          </div>
-
-          {/* Right section icons */}
-          <div className="flex items-center gap-5">
-            {/* Notifications */}
-            <div className="relative">
-              <button 
-                onClick={() => setNotifOpen(!notifOpen)}
-                className="w-9 h-9 rounded-full bg-[#163322]/20 border border-white/5 flex items-center justify-center text-slate-400 hover:text-slate-200 relative"
-              >
-                <Bell size={16} />
-                {notifications.some(n => !n.read) && (
-                  <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-gold rounded-full border-2 border-[#0a150f]" />
-                )}
-              </button>
-              
-              {/* Notif box dropdown */}
-              {notifOpen && (
-                <div className="absolute right-0 mt-3 w-80 glass-panel-heavy rounded-xl border border-white/10 p-4 shadow-xl space-y-3 z-50">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-2 border-b border-white/5">Store Notifications</h4>
-                  <div className="space-y-2.5">
-                    {notifications.map(n => (
-                      <div key={n.id} className="text-xs border-b border-white/5 pb-2.5 last:border-0 last:pb-0">
-                        <p className={`font-medium ${n.read ? 'text-slate-400' : 'text-slate-200'}`}>{n.text}</p>
-                        <span className="text-[10px] text-slate-500 mt-1 block">{n.time}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Profile Avatar */}
-            <div className="relative">
-              <button 
-                onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-2"
-              >
-                <div className="w-9 h-9 rounded-full bg-[#163322]/50 border border-gold/20 flex items-center justify-center text-gold font-bold text-sm">
-                  A
-                </div>
-              </button>
-              
-              {/* Profile dropdown */}
-              {profileOpen && (
-                <div className="absolute right-0 mt-3 w-48 glass-panel-heavy rounded-xl border border-white/10 p-2.5 shadow-xl space-y-1.5 z-50 text-xs font-semibold">
-                  <div className="px-3.5 py-2 border-b border-white/5">
-                    <span className="block text-slate-400 text-[10px] uppercase font-bold">Admin Account</span>
-                    <span className="block text-slate-200 truncate mt-0.5">{adminUser.email}</span>
-                  </div>
-                  <button onClick={handleLogout} className="w-full text-left px-3.5 py-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors">
-                    Log out
-                  </button>
-                </div>
-              )}
-            </div>
-
-          </div>
-        </header>
-
-        {/* WORKSPACE VIEW CONTENT AREA */}
-        <main className="flex-1 overflow-y-auto p-8 relative z-10">
-          
-          {/* A. DASHBOARD VIEW */}
-          {activeTab === 'dashboard' && (
-            <div className="space-y-8">
-              <h2 className="text-xl font-serif text-[#F8F6F2]">Dashboard Overview</h2>
-              
-              {/* Statistics Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-[#163322]/30 border border-white/5 rounded-xl p-5 shadow-lg flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Total Products</span>
-                    <span className="text-2xl font-serif text-[#F8F6F2] font-bold mt-1 block">{products.length}</span>
-                  </div>
-                  <span className="text-3xl">🍵</span>
-                </div>
-                <div className="bg-[#163322]/30 border border-white/5 rounded-xl p-5 shadow-lg flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Total Orders</span>
-                    <span className="text-2xl font-serif text-[#F8F6F2] font-bold mt-1 block">{orders.length}</span>
-                  </div>
-                  <span className="text-3xl">📦</span>
-                </div>
-                <div className="bg-[#163322]/30 border border-white/5 rounded-xl p-5 shadow-lg flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Customers</span>
-                    <span className="text-2xl font-serif text-[#F8F6F2] font-bold mt-1 block">{customers.length}</span>
-                  </div>
-                  <span className="text-3xl">👥</span>
-                </div>
-                <div className="bg-[#163322]/30 border border-gold/10 rounded-xl p-5 shadow-lg flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-gold/60 font-bold uppercase tracking-wider block">Revenue</span>
-                    <span className="text-2xl font-serif text-gold font-bold mt-1 block">₹{totalRev}</span>
-                  </div>
-                  <span className="text-3xl">💵</span>
-                </div>
+        {/* ========================================================= */}
+        {/* 1. DASHBOARD OVERVIEW TAB */}
+        {/* ========================================================= */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+              <div>
+                <span className="text-gold text-xs font-semibold uppercase tracking-widest">Kindleaf Control Center</span>
+                <h2 className="text-2xl sm:text-3xl font-serif text-[#F8F6F2] font-bold mt-1">Website Overview &amp; Content Status</h2>
+                <p className="text-xs text-slate-400 mt-1">Manage public tea products, stories, botanicals, and promotions without editing code.</p>
               </div>
 
-              {/* Graphic custom Chart and Recents */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                {/* Visual SVG chart */}
-                <div className="lg:col-span-2 bg-[#0a150f] border border-white/5 rounded-xl p-6 shadow-lg">
-                  <div className="flex justify-between items-center mb-6">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Revenue Trend (Delivered)</h4>
-                    <span className="text-[10px] bg-gold/10 text-gold px-2 py-0.5 rounded font-bold">Store Sales</span>
-                  </div>
-                  {/* SVG Chart placeholder */}
-                  <div className="h-48 w-full flex items-end">
-                    <svg viewBox="0 0 100 40" className="w-full h-full">
-                      <defs>
-                        <linearGradient id="chart-grad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#c5a880" stopOpacity="0.4" />
-                          <stop offset="100%" stopColor="#c5a880" stopOpacity="0" />
-                        </linearGradient>
-                      </defs>
-                      <path d="M 0,40 Q 20,20 40,30 T 80,10 L 100,20 L 100,40 Z" fill="url(#chart-grad)" />
-                      <path d="M 0,40 Q 20,20 40,30 T 80,10 L 100,20" fill="none" stroke="#c5a880" strokeWidth="1.5" />
-                    </svg>
-                  </div>
-                  <div className="flex justify-between text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-4">
-                    <span>Aug 01</span>
-                    <span>Aug 03</span>
-                    <span>Aug 05</span>
-                    <span>Today</span>
-                  </div>
-                </div>
-
-                {/* Quick actions panel */}
-                <div className="bg-[#0a150f] border border-white/5 rounded-xl p-6 shadow-lg flex flex-col justify-between">
-                  <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-2 border-b border-white/5 mb-6">Quick Actions</h4>
-                    <div className="space-y-3">
-                      <button onClick={() => openProductForm()} className="w-full bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold py-2.5 rounded-lg text-xs flex items-center justify-center gap-2">
-                        <Plus size={14} />
-                        <span>Add New Product</span>
-                      </button>
-                      <button onClick={() => setActiveTab('homepage')} className="w-full bg-[#163322]/20 border border-white/10 hover:bg-[#163322]/40 text-[#F8F6F2] font-semibold py-2.5 rounded-lg text-xs flex items-center justify-center gap-2">
-                        <Home size={14} />
-                        <span>Edit Homepage Details</span>
-                      </button>
-                      <button onClick={() => setActiveTab('reviews')} className="w-full bg-[#163322]/20 border border-white/10 hover:bg-[#163322]/40 text-[#F8F6F2] font-semibold py-2.5 rounded-lg text-xs flex items-center justify-center gap-2">
-                        <Check size={14} />
-                        <span>Approve Pending Reviews</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          )}
-
-          {/* B. PRODUCTS MANAGEMENT VIEW */}
-          {activeTab === 'products' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-serif text-[#F8F6F2]">Catalog Management</h2>
-                <button 
-                  onClick={() => openProductForm()}
-                  className="bg-gold hover:bg-gold-hover text-[#0c1912] font-bold text-xs px-4 py-2.5 rounded-lg flex items-center gap-2"
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer shadow"
                 >
-                  <Plus size={14} />
-                  <span>Add Product</span>
+                  <Upload size={14} />
+                  <span>{uploading ? 'Uploading...' : 'Quick Upload Media'}</span>
                 </button>
               </div>
-
-              {/* Products Table */}
-              <div className="bg-[#0a150f] border border-white/5 rounded-xl overflow-hidden shadow-lg">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-[#163322]/20 border-b border-white/5 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                      <th className="p-4">Product Details</th>
-                      <th className="p-4">SKU / Code</th>
-                      <th className="p-4">Weight</th>
-                      <th className="p-4">Stock</th>
-                      <th className="p-4">Price</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4 text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="font-semibold text-slate-300 divide-y divide-white/5">
-                    {products.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase())).map(p => (
-                      <tr key={p.id} className="hover:bg-white/5">
-                        <td className="p-4 flex items-center gap-3">
-                          <img src={p.img} alt={p.title} className="w-10 h-10 object-contain rounded bg-emerald-950/20" />
-                          <div>
-                            <span className="block font-serif text-sm text-[#F8F6F2]">{p.title}</span>
-                            <span className="text-[10px] text-slate-500">{p.category}</span>
-                          </div>
-                        </td>
-                        <td className="p-4 font-mono text-slate-400">{p.sku || 'N/A'}</td>
-                        <td className="p-4">{p.weight}</td>
-                        <td className="p-4">{p.stock}</td>
-                        <td className="p-4">
-                          <span className="text-gold">₹{p.price}</span>
-                          {p.sale_price && <span className="text-slate-500 line-through text-[10px] ml-2">₹{p.sale_price}</span>}
-                        </td>
-                        <td className="p-4">
-                          <button 
-                            onClick={() => toggleProductStatus(p)}
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold ${p.status === 'published' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-700/30 text-slate-500'}`}
-                          >
-                            {p.status}
-                          </button>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center justify-center gap-3">
-                            <button onClick={() => openProductForm(p)} className="text-slate-400 hover:text-gold transition-colors">
-                              <Edit size={14} />
-                            </button>
-                            <button onClick={() => handleDeleteProduct(p.id)} className="text-slate-400 hover:text-red-400 transition-colors">
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
             </div>
-          )}
 
-          {/* C. ORDERS MANAGEMENT VIEW */}
-          {activeTab === 'orders' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-serif text-[#F8F6F2]">Order Queue</h2>
+            {/* Metrics Cards Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              {[
+                { label: 'Products', count: products.length, icon: ShoppingBasket, tab: 'products', sub: `${products.filter(p => p.status === 'published').length} Live` },
+                { label: 'Journal Articles', count: journalArticles.length, icon: FileText, tab: 'journal', sub: `${journalArticles.filter(b => b.status === 'published').length} Published` },
+                { label: 'Botanicals', count: ingredients.length, icon: Sparkles, tab: 'ingredients', sub: 'Active blends' },
+                { label: 'Media Files', count: mediaItems.length, icon: ImageIcon, tab: 'media', sub: 'Images & Audio' },
+                { label: 'Active Offers', count: offers.filter(o => o.active).length, icon: Tag, tab: 'offers', sub: 'Live banners' },
+                { label: 'Help FAQs', count: faqs.length, icon: HelpCircle, tab: 'faqs', sub: `${faqs.filter(f => f.status === 'published').length} Active` }
+              ].map(stat => (
+                <div 
+                  key={stat.label}
+                  onClick={() => setActiveTab(stat.tab)}
+                  className="p-5 rounded-2xl bg-[#0c1912] border border-white/10 hover:border-gold/40 transition-all cursor-pointer space-y-2 group"
+                >
+                  <div className="flex items-center justify-between text-slate-400">
+                    <stat.icon size={18} className="text-gold group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] text-slate-400 font-mono">{stat.sub}</span>
+                  </div>
+                  <div className="text-2xl font-serif text-[#F8F6F2] font-bold">{stat.count}</div>
+                  <div className="text-xs font-medium text-slate-300">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Quick Action Navigation Panels */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               
-              <div className="bg-[#0a150f] border border-white/5 rounded-xl overflow-hidden shadow-lg">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-[#163322]/20 border-b border-white/5 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                      <th className="p-4">Order ID</th>
-                      <th className="p-4">Customer Details</th>
-                      <th className="p-4">Product Info</th>
-                      <th className="p-4">Total Amount</th>
-                      <th className="p-4">Date</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4 text-center">Invoice</th>
-                    </tr>
-                  </thead>
-                  <tbody className="font-semibold text-slate-300 divide-y divide-white/5">
-                    {orders.filter(o => o.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) || o.product_title.toLowerCase().includes(searchQuery.toLowerCase())).map(o => (
-                      <tr key={o.id} className="hover:bg-white/5">
-                        <td className="p-4 font-mono text-slate-400">{o.id}</td>
-                        <td className="p-4">
-                          <span className="block text-[#F8F6F2]">{o.customer_name}</span>
-                          <span className="text-[10px] text-slate-500 block">{o.customer_phone}</span>
-                        </td>
-                        <td className="p-4">
-                          <span>{o.product_title}</span>
-                          <span className="text-[10px] text-slate-500 block">Qty: {o.quantity}</span>
-                        </td>
-                        <td className="p-4 text-gold">₹{o.total_price}</td>
-                        <td className="p-4 text-slate-400">{new Date(o.created_at).toLocaleDateString()}</td>
-                        <td className="p-4">
-                          <select 
-                            value={o.status}
-                            onChange={(e) => updateStatus(o.id, e.target.value)}
-                            className="bg-[#0c1912] border border-white/10 rounded px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none"
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="processing">Processing</option>
-                            <option value="shipped">Shipped</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
-                          </select>
-                        </td>
-                        <td className="p-4 text-center">
-                          <button 
-                            onClick={() => { setActiveOrder(o); setOrderModalOpen(true); }}
-                            className="text-gold hover:text-gold-hover flex items-center gap-1 mx-auto"
-                          >
-                            <Eye size={12} />
-                            <span>Invoice</span>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              {/* Card 1: Products quick launch */}
+              <div className="p-6 rounded-2xl bg-[#0c1912] border border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-serif font-bold text-base text-[#F8F6F2]">Public Products</h3>
+                  <button onClick={() => { setEditingProduct(null); setProductModalOpen(true); }} className="text-xs text-gold hover:underline flex items-center gap-1">
+                    <Plus size={13} /> Add Product
+                  </button>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Modify pack sizes, pricing, botanical ingredients, tasting notes, and FSSAI facts displayed on the website.
+                </p>
+                <div className="space-y-2 pt-1">
+                  {products.slice(0, 3).map(p => (
+                    <div key={p.id} className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 text-xs">
+                      <span className="truncate max-w-[180px] text-[#F8F6F2] font-medium">{p.title}</span>
+                      <span className="text-gold font-mono">{p.weight}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Card 2: Journal quick launch */}
+              <div className="p-6 rounded-2xl bg-[#0c1912] border border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-serif font-bold text-base text-[#F8F6F2]">The Tea Chronicle</h3>
+                  <button onClick={() => { setEditingJournal(null); setJournalModalOpen(true); }} className="text-xs text-gold hover:underline flex items-center gap-1">
+                    <Plus size={13} /> Write Story
+                  </button>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Publish essays on slow living, brewing science, and ingredients. Published blogs appear on the homepage and /journal.
+                </p>
+                <div className="space-y-2 pt-1">
+                  {journalArticles.slice(0, 3).map(b => (
+                    <div key={b.id} className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 text-xs">
+                      <span className="truncate max-w-[180px] text-[#F8F6F2] font-medium">{b.title}</span>
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wider">{b.category}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Card 3: Promo offers quick launch */}
+              <div className="p-6 rounded-2xl bg-[#0c1912] border border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-serif font-bold text-base text-[#F8F6F2]">Active Offers</h3>
+                  <button onClick={() => { setEditingOffer(null); setOfferModalOpen(true); }} className="text-xs text-gold hover:underline flex items-center gap-1">
+                    <Plus size={13} /> New Offer
+                  </button>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Promotional banners show at the top of the website and redirect users to download the Kindleaf Mobile App.
+                </p>
+                <div className="space-y-2 pt-1">
+                  {offers.slice(0, 3).map(o => (
+                    <div key={o.id} className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 text-xs">
+                      <span className="truncate max-w-[180px] text-[#F8F6F2] font-medium">{o.title}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${o.active ? 'bg-emerald-900/60 text-emerald-300' : 'bg-slate-700 text-slate-300'}`}>
+                        {o.active ? 'Active' : 'Paused'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* 2. PRODUCTS MANAGEMENT TAB */}
+        {/* ========================================================= */}
+        {activeTab === 'products' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+              <div>
+                <h2 className="text-2xl font-serif text-[#F8F6F2] font-bold">Product Catalog</h2>
+                <p className="text-xs text-slate-400 mt-1">Manage public blend listings, weights, pack descriptions, and botanical specifications.</p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setEditingProduct({
+                    title: "",
+                    slug: "",
+                    description: "",
+                    short_description: "",
+                    price: 249,
+                    weight: "50g Pouch",
+                    category: "Single Pack",
+                    taste_profile: "",
+                    aroma: "",
+                    brewing_summary: "85°C water • 1 tsp (~2g) • 3-5 mins covered",
+                    fssai_info: "FSSAI Licensed Food Business",
+                    img: "/assets/product_natural.png",
+                    images: ["/assets/product_natural.png"],
+                    status: "published",
+                    featured: false,
+                    seo_title: "",
+                    seo_description: ""
+                  });
+                  setProductModalOpen(true);
+                }}
+                className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer shadow"
+              >
+                <Plus size={16} />
+                <span>Add New Product</span>
+              </button>
+            </div>
+
+            {/* Filter bar */}
+            <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-[#0c1912] border border-white/10 text-xs">
+              <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2 w-full sm:w-72">
+                <Search size={14} className="text-slate-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-transparent outline-none w-full text-slate-200 placeholder-slate-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                {(['all', 'published', 'draft'] as const).map(st => (
+                  <button
+                    key={st}
+                    onClick={() => setStatusFilter(st)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium uppercase tracking-wider transition-colors cursor-pointer ${
+                      statusFilter === st ? 'bg-gold text-[#0c1912] font-bold' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {st}
+                  </button>
+                ))}
               </div>
             </div>
-          )}
 
-          {/* D. CUSTOMERS LIST VIEW */}
-          {activeTab === 'customers' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-serif text-[#F8F6F2]">Customer Records</h2>
-
-              <div className="bg-[#0a150f] border border-white/5 rounded-xl overflow-hidden shadow-lg">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-[#163322]/20 border-b border-white/5 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                      <th className="p-4">Customer Name</th>
-                      <th className="p-4">Email</th>
-                      <th className="p-4">Phone Number</th>
-                      <th className="p-4">Order History Count</th>
-                    </tr>
-                  </thead>
-                  <tbody className="font-semibold text-slate-300 divide-y divide-white/5">
-                    {customers.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map(c => (
-                      <tr key={c.id} className="hover:bg-white/5">
-                        <td className="p-4 text-[#F8F6F2]">{c.name}</td>
-                        <td className="p-4 text-slate-400">{c.email || 'N/A'}</td>
-                        <td className="p-4 font-mono text-slate-400">{c.phone || 'N/A'}</td>
+            {/* Products Table */}
+            <div className="rounded-2xl border border-white/10 bg-[#0c1912] overflow-hidden">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b border-white/10 bg-[#0a150f] text-slate-400 uppercase tracking-wider text-[10px]">
+                  <tr>
+                    <th className="p-4">Product</th>
+                    <th className="p-4">Net Weight</th>
+                    <th className="p-4">Category</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {products
+                    .filter(p => {
+                      const matchesSearch = p.title?.toLowerCase().includes(searchQuery.toLowerCase()) || p.slug?.toLowerCase().includes(searchQuery.toLowerCase());
+                      const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
+                      return matchesSearch && matchesStatus;
+                    })
+                    .map(p => (
+                      <tr key={p.id} className="hover:bg-white/5 transition-colors">
                         <td className="p-4">
-                          <span className="bg-[#163322] border border-white/10 px-2.5 py-0.5 rounded text-[10px] text-gold font-bold">
-                            {c.order_history ? c.order_history.length : 0} Orders
+                          <div className="flex items-center gap-3">
+                            <img src={p.img || '/assets/product_natural.png'} alt={p.title} className="w-10 h-10 object-contain rounded-lg bg-[#163322]/30 p-1 border border-white/10" />
+                            <div>
+                              <span className="font-serif font-bold text-[#F8F6F2] block">{p.title}</span>
+                              <span className="text-[11px] text-slate-400 font-mono">{p.slug}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 font-mono text-gold font-semibold">{p.weight}</td>
+                        <td className="p-4 text-slate-300">{p.category || 'Herbal Tea'}</td>
+                        <td className="p-4">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            p.status === 'published' ? 'bg-emerald-900/40 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'
+                          }`}>
+                            {p.status}
                           </span>
                         </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* E. REVIEWS MANAGEMENT VIEW */}
-          {activeTab === 'reviews' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-serif text-[#F8F6F2]">Review Moderation</h2>
-
-              <div className="bg-[#0a150f] border border-white/5 rounded-xl overflow-hidden shadow-lg">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-[#163322]/20 border-b border-white/5 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                      <th className="p-4">Customer</th>
-                      <th className="p-4">Rating</th>
-                      <th className="p-4">Comment</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4">Featured</th>
-                      <th className="p-4 text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="font-semibold text-slate-300 divide-y divide-white/5">
-                    {reviews.filter(r => r.customer_name.toLowerCase().includes(searchQuery.toLowerCase())).map(r => (
-                      <tr key={r.id} className="hover:bg-white/5">
-                        <td className="p-4 text-[#F8F6F2]">{r.customer_name}</td>
-                        <td className="p-4 text-gold font-serif">{"★".repeat(r.rating)}</td>
-                        <td className="p-4 max-w-xs truncate text-slate-400">{r.comment}</td>
-                        <td className="p-4">
-                          <button 
-                            onClick={() => toggleReviewFlag(r.id, 'approved', !r.approved)}
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold ${r.approved ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}
+                        <td className="p-4 text-right space-x-2">
+                          <button
+                            onClick={() => {
+                              setPreviewModal({ open: true, type: 'product', data: p });
+                            }}
+                            title="Preview in website component"
+                            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-gold transition-colors cursor-pointer"
                           >
-                            {r.approved ? 'Approved' : 'Pending'}
+                            <Eye size={14} />
                           </button>
-                        </td>
-                        <td className="p-4">
-                          <button 
-                            onClick={() => toggleReviewFlag(r.id, 'featured', !r.featured)}
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold ${r.featured ? 'bg-gold/10 text-gold border border-gold/30' : 'bg-slate-700/30 text-slate-500'}`}
+                          <button
+                            onClick={() => {
+                              setEditingProduct(p);
+                              setProductModalOpen(true);
+                            }}
+                            title="Edit product"
+                            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
                           >
-                            {r.featured ? 'Featured' : 'Regular'}
+                            <Edit size={14} />
                           </button>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center justify-center gap-3">
-                            <button onClick={() => handleDeleteReview(r.id)} className="text-slate-400 hover:text-red-400 transition-colors">
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
+                          <button
+                            onClick={() => {
+                              setDeleteModal({
+                                open: true,
+                                title: `Delete product "${p.title}"?`,
+                                onConfirm: async () => {
+                                  await fetch(`/api/products?id=${p.id}`, { method: 'DELETE' });
+                                  setProducts(prev => prev.filter(x => x.id !== p.id));
+                                  showToast("Product deleted successfully");
+                                  setDeleteModal(null);
+                                }
+                              });
+                            }}
+                            title="Delete product"
+                            className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors cursor-pointer"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </td>
                       </tr>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                </tbody>
+              </table>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* F. HOMEPAGE CUSTOMIZER VIEW */}
-          {activeTab === 'homepage' && (
-            <div className="space-y-8">
-              <h2 className="text-xl font-serif text-[#F8F6F2]">Homepage Editor</h2>
-              
-              {/* Section 1: Hero */}
-              <div className="bg-[#0a150f] border border-white/5 rounded-xl p-6 shadow-lg space-y-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-2 border-b border-white/5 mb-2">Hero Section</h4>
-                
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Accent Tag</label>
-                    <input 
-                      type="text" 
-                      value={homepageContent.hero.tag}
-                      onChange={(e) => setHomepageContent({ ...homepageContent, hero: { ...homepageContent.hero, tag: e.target.value } })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Heading Text</label>
-                    <input 
-                      type="text" 
-                      value={homepageContent.hero.heading}
-                      onChange={(e) => setHomepageContent({ ...homepageContent, hero: { ...homepageContent.hero, heading: e.target.value } })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-[10px] text-slate-500 font-bold uppercase">Sub-description</label>
-                  <textarea 
-                    rows={2}
-                    value={homepageContent.hero.description}
-                    onChange={(e) => setHomepageContent({ ...homepageContent, hero: { ...homepageContent.hero, description: e.target.value } })}
-                    className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-xs text-slate-200 focus:outline-none"
-                  />
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button 
-                    onClick={() => saveHomepageConfig('hero', homepageContent.hero)}
-                    className="bg-gold text-[#0c1912] font-bold text-xs px-5 py-2 rounded-lg"
-                  >
-                    Save Changes
-                  </button>
-                </div>
+        {/* ========================================================= */}
+        {/* 3. JOURNAL / BLOG MANAGEMENT TAB */}
+        {/* ========================================================= */}
+        {activeTab === 'journal' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+              <div>
+                <h2 className="text-2xl font-serif text-[#F8F6F2] font-bold">The Tea Chronicle (Journal)</h2>
+                <p className="text-xs text-slate-400 mt-1">Write, edit, and publish stories on slow living, herbal botanicals, and brewing mindfulness.</p>
               </div>
 
-              {/* Section 2: Why Kindleaf */}
-              <div className="bg-[#0a150f] border border-white/5 rounded-xl p-6 shadow-lg space-y-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-2 border-b border-white/5 mb-2">Why Kindleaf (Philosophy)</h4>
-                
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Accent Tag</label>
-                    <input 
-                      type="text" 
-                      value={homepageContent.why_kindleaf.tag}
-                      onChange={(e) => setHomepageContent({ ...homepageContent, why_kindleaf: { ...homepageContent.why_kindleaf, tag: e.target.value } })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Heading Text</label>
-                    <input 
-                      type="text" 
-                      value={homepageContent.why_kindleaf.heading}
-                      onChange={(e) => setHomepageContent({ ...homepageContent, why_kindleaf: { ...homepageContent.why_kindleaf, heading: e.target.value } })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-[10px] text-slate-500 font-bold uppercase">Description</label>
-                  <textarea 
-                    rows={2}
-                    value={homepageContent.why_kindleaf.description}
-                    onChange={(e) => setHomepageContent({ ...homepageContent, why_kindleaf: { ...homepageContent.why_kindleaf, description: e.target.value } })}
-                    className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-xs text-slate-200 focus:outline-none"
-                  />
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button 
-                    onClick={() => saveHomepageConfig('why_kindleaf', homepageContent.why_kindleaf)}
-                    className="bg-gold text-[#0c1912] font-bold text-xs px-5 py-2 rounded-lg"
-                  >
-                    Save Changes
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* G. MEDIA LIBRARY VIEW */}
-          {activeTab === 'media' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-serif text-[#F8F6F2]">Media Library</h2>
-                <div className="flex items-center gap-4">
-                  <input 
-                    type="file" 
-                    accept="image/*"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    className="hidden" 
-                  />
-                  <button 
-                    onClick={handleUploadClick}
-                    disabled={uploading}
-                    className="bg-gold hover:bg-gold-hover disabled:bg-gold/50 text-[#0c1912] font-bold text-xs px-4 py-2.5 rounded-lg flex items-center gap-2"
-                  >
-                    <Upload size={14} />
-                    <span>{uploading ? 'Compressing & Saving...' : 'Upload Image'}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Drag and Drop visual grid */}
-              <div 
-                onClick={handleUploadClick}
-                className="border-2 border-dashed border-white/10 hover:border-gold/30 rounded-2xl p-10 text-center cursor-pointer bg-[#0a150f] transition-colors"
+              <button
+                onClick={() => {
+                  setEditingJournal({
+                    title: "",
+                    slug: "",
+                    category: "Tea Rituals",
+                    readTime: "4 min read",
+                    author: "Kindleaf Herbalist",
+                    date: "September 2026",
+                    coverImage: "/assets/hero_tea_cup.png",
+                    excerpt: "",
+                    content: ["Write the first paragraph of your story here..."],
+                    status: "published",
+                    seo_title: "",
+                    seo_description: ""
+                  });
+                  setJournalModalOpen(true);
+                }}
+                className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer shadow"
               >
-                <Upload size={32} className="mx-auto text-slate-500 mb-3" />
-                <span className="text-xs font-semibold text-slate-300 block">Drag &amp; Drop images here to upload</span>
-                <span className="text-[10px] text-slate-500 mt-1 block">Compression is applied automatically on server.</span>
-              </div>
+                <Plus size={16} />
+                <span>Write New Article</span>
+              </button>
+            </div>
 
-              {/* Media items grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-6">
-                {media.map(m => (
-                  <div key={m.id} className="group relative bg-[#0a150f] border border-white/5 rounded-xl overflow-hidden shadow-md">
-                    <div className="aspect-square bg-emerald-950/10 p-4 flex items-center justify-center relative">
-                      <img src={m.url} alt={m.filename} className="max-h-full max-w-full object-contain" />
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                        <button onClick={() => handleDeleteMedia(m.id)} className="p-2 bg-red-500/80 rounded-full text-white hover:bg-red-600 transition-colors">
-                          <Trash2 size={12} />
+            {/* Articles Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {journalArticles
+                .filter(a => {
+                  return a.title?.toLowerCase().includes(searchQuery.toLowerCase()) || a.category?.toLowerCase().includes(searchQuery.toLowerCase());
+                })
+                .map(article => (
+                  <div key={article.id} className="p-5 rounded-2xl bg-[#0c1912] border border-white/10 space-y-4 flex flex-col justify-between hover:border-gold/30 transition-all">
+                    <div className="space-y-3">
+                      <div className="aspect-16/9 rounded-xl overflow-hidden bg-black/40 relative">
+                        <img src={article.coverImage || '/assets/hero_tea_cup.png'} alt={article.title} className="w-full h-full object-cover" />
+                        <span className="absolute top-2 left-2 bg-[#0c1912]/80 backdrop-blur-md text-gold text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/10">
+                          {article.category}
+                        </span>
+                      </div>
+
+                      <h3 className="font-serif font-bold text-[#F8F6F2] text-sm leading-snug line-clamp-2">{article.title}</h3>
+                      <p className="text-slate-400 text-xs line-clamp-3 leading-relaxed">{article.excerpt}</p>
+                    </div>
+
+                    <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold ${
+                        article.status === 'published' ? 'bg-emerald-900/40 text-emerald-300' : 'bg-slate-800 text-slate-400'
+                      }`}>
+                        {article.status}
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setPreviewModal({ open: true, type: 'journal', data: article })}
+                          title="Preview article"
+                          className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-gold transition-colors"
+                        >
+                          <Eye size={13} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingJournal(article);
+                            setJournalModalOpen(true);
+                          }}
+                          title="Edit article"
+                          className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors"
+                        >
+                          <Edit size={13} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setDeleteModal({
+                              open: true,
+                              title: `Delete article "${article.title}"?`,
+                              onConfirm: async () => {
+                                await fetch(`/api/journal?id=${article.id}`, { method: 'DELETE' });
+                                setJournalArticles(prev => prev.filter(x => x.id !== article.id));
+                                showToast("Article deleted successfully");
+                                setDeleteModal(null);
+                              }
+                            });
+                          }}
+                          title="Delete article"
+                          className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
+                        >
+                          <Trash2 size={13} />
                         </button>
                       </div>
                     </div>
-                    <div className="p-2 text-[10px] border-t border-white/5 truncate">
-                      <span className="text-slate-300 font-semibold block truncate">{m.filename}</span>
-                      <span className="text-slate-500">{(m.size / 1024).toFixed(1)} KB</span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* 4. MEDIA LIBRARY TAB */}
+        {/* ========================================================= */}
+        {activeTab === 'media' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+              <div>
+                <h2 className="text-2xl font-serif text-[#F8F6F2] font-bold">Media Library</h2>
+                <p className="text-xs text-slate-400 mt-1">Upload and manage image assets and ambient audio files for all website sections.</p>
+              </div>
+
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer shadow"
+              >
+                <Upload size={15} />
+                <span>{uploading ? 'Uploading...' : 'Upload Media'}</span>
+              </button>
+            </div>
+
+            {/* Filter buttons */}
+            <div className="flex items-center gap-2 text-xs">
+              {(['all', 'image', 'audio'] as const).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setMediaTypeFilter(t)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium uppercase tracking-wider transition-colors cursor-pointer ${
+                    mediaTypeFilter === t ? 'bg-gold text-[#0c1912] font-bold' : 'text-slate-400 hover:text-white bg-white/5'
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            {/* Media Items Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {mediaItems
+                .filter(m => {
+                  if (mediaTypeFilter === 'image') return m.mime_type?.startsWith('image/') || m.url?.match(/\.(png|jpg|jpeg|webp|svg)$/i);
+                  if (mediaTypeFilter === 'audio') return m.mime_type?.startsWith('audio/') || m.url?.match(/\.(mp3|mpeg|wav|ogg|m4a)$/i);
+                  return true;
+                })
+                .map(item => {
+                  const isAudio = item.mime_type?.startsWith('audio/') || item.url?.match(/\.(mp3|mpeg|wav|ogg|m4a)$/i);
+                  return (
+                    <div key={item.id} className="p-3 rounded-2xl bg-[#0c1912] border border-white/10 space-y-2 flex flex-col justify-between group hover:border-gold/30 transition-all">
+                      <div className="aspect-square rounded-xl bg-black/40 flex items-center justify-center overflow-hidden relative">
+                        {isAudio ? (
+                          <div className="flex flex-col items-center gap-2 text-gold">
+                            <Music size={28} />
+                            <span className="text-[10px] text-slate-400 font-mono">Audio Clip</span>
+                          </div>
+                        ) : (
+                          <img src={item.url} alt={item.filename} className="max-h-full max-w-full object-contain p-2" />
+                        )}
+                      </div>
+
+                      <div>
+                        <span className="text-xs font-medium text-[#F8F6F2] truncate block" title={item.filename}>{item.filename}</span>
+                        <span className="text-[10px] text-slate-400 font-mono block">
+                          {item.size ? `${(item.size / 1024).toFixed(1)} KB` : 'Local Asset'}
+                        </span>
+                      </div>
+
+                      <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(item.url);
+                            showToast("Copied URL to clipboard!");
+                          }}
+                          className="text-[11px] text-gold hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <Copy size={11} /> Copy URL
+                        </button>
+                        <button
+                          onClick={() => {
+                            setDeleteModal({
+                              open: true,
+                              title: `Delete media "${item.filename}"?`,
+                              onConfirm: async () => {
+                                await fetch(`/api/media?id=${item.id}`, { method: 'DELETE' });
+                                setMediaItems(prev => prev.filter(x => x.id !== item.id));
+                                showToast("Media file removed");
+                                setDeleteModal(null);
+                              }
+                            });
+                          }}
+                          className="text-red-400 hover:text-red-300 p-1 cursor-pointer"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* 5. OFFERS & PROMOTIONS TAB */}
+        {/* ========================================================= */}
+        {activeTab === 'offers' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+              <div>
+                <h2 className="text-2xl font-serif text-[#F8F6F2] font-bold">Promotional Banners &amp; Offers</h2>
+                <p className="text-xs text-slate-400 mt-1">Configure announcement banners with app download calls to action (no web checkout).</p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setEditingOffer({
+                    title: "Special Harvest Offering",
+                    description: "Handcrafted in small batches in Jasrana. Available exclusively via the Kindleaf App.",
+                    cta_text: "GET THE KINDLEAF APP",
+                    cta_link: "#get-the-app",
+                    start_date: new Date().toISOString().split('T')[0],
+                    end_date: "2026-12-31",
+                    active: true,
+                    priority: 1,
+                    status: "published"
+                  });
+                  setOfferModalOpen(true);
+                }}
+                className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer shadow"
+              >
+                <Plus size={16} />
+                <span>Create Offer Banner</span>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {offers.map(offer => (
+                <div key={offer.id} className="p-6 rounded-2xl bg-[#0c1912] border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-gold/30 transition-all">
+                  <div className="space-y-2 max-w-2xl">
+                    <div className="flex items-center gap-2.5">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        offer.active ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'
+                      }`}>
+                        {offer.active ? 'Active & Displaying' : 'Paused'}
+                      </span>
+                      <span className="text-xs text-slate-400 font-mono">Until {offer.end_date || 'No expiry'}</span>
+                    </div>
+
+                    <h3 className="font-serif font-bold text-lg text-[#F8F6F2]">{offer.title}</h3>
+                    <p className="text-xs text-slate-300 leading-relaxed">{offer.description}</p>
+                    
+                    <div className="flex items-center gap-3 pt-1">
+                      <span className="text-xs font-semibold text-gold bg-gold/10 px-3 py-1 rounded-lg border border-gold/20">
+                        CTA: {offer.cta_text || 'GET THE KINDLEAF APP'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button
+                      onClick={() => setPreviewModal({ open: true, type: 'offer', data: offer })}
+                      className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-slate-300 hover:text-gold flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Eye size={14} /> Preview
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingOffer(offer);
+                        setOfferModalOpen(true);
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-slate-300 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Edit size={14} /> Edit
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDeleteModal({
+                          open: true,
+                          title: `Delete offer "${offer.title}"?`,
+                          onConfirm: async () => {
+                            await fetch(`/api/offers?id=${offer.id}`, { method: 'DELETE' });
+                            setOffers(prev => prev.filter(x => x.id !== offer.id));
+                            showToast("Offer removed");
+                            setDeleteModal(null);
+                          }
+                        });
+                      }}
+                      className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors cursor-pointer"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* 6. HOMEPAGE CONTENT TAB */}
+        {/* ========================================================= */}
+        {activeTab === 'homepage' && (
+          <div className="space-y-8 max-w-4xl">
+            <div className="border-b border-white/10 pb-6">
+              <h2 className="text-2xl font-serif text-[#F8F6F2] font-bold">Homepage Content Editor</h2>
+              <p className="text-xs text-slate-400 mt-1">Update headline text, hero copy, and philosophy statements. The approved frontend presentation remains untouched.</p>
+            </div>
+
+            {/* Hero Editor */}
+            <div className="p-6 rounded-2xl bg-[#0c1912] border border-white/10 space-y-4">
+              <h3 className="font-serif font-bold text-base text-gold flex items-center gap-2">
+                <span>1. Hero Section</span>
+              </h3>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Headline Badge / Tag</label>
+                  <input
+                    type="text"
+                    value={homepageContent?.hero?.tag || ""}
+                    onChange={(e) => setHomepageContent({
+                      ...homepageContent,
+                      hero: { ...homepageContent.hero, tag: e.target.value }
+                    })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Main Heading</label>
+                  <input
+                    type="text"
+                    value={homepageContent?.hero?.heading || ""}
+                    onChange={(e) => setHomepageContent({
+                      ...homepageContent,
+                      hero: { ...homepageContent.hero, heading: e.target.value }
+                    })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Hero Description Paragraph</label>
+                  <textarea
+                    rows={3}
+                    value={homepageContent?.hero?.description || ""}
+                    onChange={(e) => setHomepageContent({
+                      ...homepageContent,
+                      hero: { ...homepageContent.hero, description: e.target.value }
+                    })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-[#F8F6F2] outline-none focus:border-gold leading-relaxed"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Primary CTA Button</label>
+                    <input
+                      type="text"
+                      value={homepageContent?.hero?.primary_btn_text || "GET THE KINDLEAF APP"}
+                      onChange={(e) => setHomepageContent({
+                        ...homepageContent,
+                        hero: { ...homepageContent.hero, primary_btn_text: e.target.value }
+                      })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Secondary Button</label>
+                    <input
+                      type="text"
+                      value={homepageContent?.hero?.secondary_btn_text || "EXPLORE THE BLEND"}
+                      onChange={(e) => setHomepageContent({
+                        ...homepageContent,
+                        hero: { ...homepageContent.hero, secondary_btn_text: e.target.value }
+                      })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Philosophy Editor */}
+            <div className="p-6 rounded-2xl bg-[#0c1912] border border-white/10 space-y-4">
+              <h3 className="font-serif font-bold text-base text-gold">2. Philosophy &amp; Slow Living</h3>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Slow Living Heading</label>
+                  <input
+                    type="text"
+                    value={homepageContent?.slow_living?.heading || ""}
+                    onChange={(e) => setHomepageContent({
+                      ...homepageContent,
+                      slow_living: { ...homepageContent.slow_living, heading: e.target.value }
+                    })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Slow Living Narrative</label>
+                  <textarea
+                    rows={3}
+                    value={homepageContent?.slow_living?.description || ""}
+                    onChange={(e) => setHomepageContent({
+                      ...homepageContent,
+                      slow_living: { ...homepageContent.slow_living, description: e.target.value }
+                    })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-[#F8F6F2] outline-none focus:border-gold leading-relaxed"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={async () => {
+                  await fetch('/api/homepage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: 'homepage_content', content: homepageContent })
+                  });
+                  showToast("Homepage content published to live website!");
+                }}
+                className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-8 py-3 rounded-xl text-xs transition-all cursor-pointer shadow-lg"
+              >
+                Save &amp; Publish Homepage Changes
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* 7. BOTANICAL INGREDIENTS TAB */}
+        {/* ========================================================= */}
+        {activeTab === 'ingredients' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+              <div>
+                <h2 className="text-2xl font-serif text-[#F8F6F2] font-bold">Botanical Ingredients</h2>
+                <p className="text-xs text-slate-400 mt-1">Manage the 4 core botanicals and add seasonal herbs without touching code.</p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setEditingIngredient({
+                    name: "",
+                    botanical: "",
+                    role: "Botanical Herb",
+                    flavorAroma: "",
+                    details: "",
+                    icon: "🍃",
+                    notes: ["Natural Aroma", "Pure Herb"],
+                    image: "/assets/hero_tea_cup.png",
+                    display_order: ingredients.length + 1,
+                    status: "published"
+                  });
+                  setIngredientModalOpen(true);
+                }}
+                className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer shadow"
+              >
+                <Plus size={16} />
+                <span>Add Botanical</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {ingredients.map(ing => (
+                <div key={ing.id || ing.key} className="p-6 rounded-2xl bg-[#0c1912] border border-white/10 space-y-4 flex flex-col justify-between hover:border-gold/30 transition-all">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl">{ing.icon || "🍃"}</span>
+                      <span className="text-gold font-mono text-xs">#{ing.number || ing.display_order}</span>
+                    </div>
+
+                    <div>
+                      <h3 className="font-serif font-bold text-base text-[#F8F6F2]">{ing.name}</h3>
+                      <p className="text-gold text-xs italic font-serif">{ing.botanical}</p>
+                    </div>
+
+                    <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">{ing.flavorAroma}</p>
+                  </div>
+
+                  <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+                    <button
+                      onClick={() => {
+                        setEditingIngredient(ing);
+                        setIngredientModalOpen(true);
+                      }}
+                      className="text-xs text-gold hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit size={13} /> Edit Details
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDeleteModal({
+                          open: true,
+                          title: `Delete botanical "${ing.name}"?`,
+                          onConfirm: async () => {
+                            await fetch(`/api/ingredients?id=${ing.id}`, { method: 'DELETE' });
+                            setIngredients(prev => prev.filter(x => x.id !== ing.id));
+                            showToast("Botanical deleted");
+                            setDeleteModal(null);
+                          }
+                        });
+                      }}
+                      className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 cursor-pointer"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* 8. BREWING GUIDE TAB */}
+        {/* ========================================================= */}
+        {activeTab === 'brewing' && (
+          <div className="space-y-8 max-w-4xl">
+            <div className="border-b border-white/10 pb-6">
+              <h2 className="text-2xl font-serif text-[#F8F6F2] font-bold">Brewing Guide &amp; Audio Manager</h2>
+              <p className="text-xs text-slate-400 mt-1">Configure the 4 steeping steps, water temperature, tips, and the background ambient audio track.</p>
+            </div>
+
+            {/* Brewing Details */}
+            <div className="p-6 rounded-2xl bg-[#0c1912] border border-white/10 space-y-4">
+              <h3 className="font-serif font-bold text-base text-gold">1. Steeping Parameters</h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Serving Size</label>
+                  <input
+                    type="text"
+                    value={brewingGuide?.serving_size || "1 teaspoon (~2g)"}
+                    onChange={(e) => setBrewingGuide({ ...brewingGuide, serving_size: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Water Temperature</label>
+                  <input
+                    type="text"
+                    value={brewingGuide?.water_temp || "Approx. 85°C"}
+                    onChange={(e) => setBrewingGuide({ ...brewingGuide, water_temp: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Steeping Duration</label>
+                  <input
+                    type="text"
+                    value={brewingGuide?.steep_time || "3 to 5 minutes covered"}
+                    onChange={(e) => setBrewingGuide({ ...brewingGuide, steep_time: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Ambient Audio Track URL</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={brewingGuide?.audio_url || "/audio/brewing-ambient.mpeg"}
+                    onChange={(e) => setBrewingGuide({ ...brewingGuide, audio_url: e.target.value })}
+                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] font-mono outline-none focus:border-gold"
+                  />
+                  <button
+                    onClick={() => openMediaPicker((url) => setBrewingGuide({ ...brewingGuide, audio_url: url }))}
+                    className="px-4 py-2 rounded-xl bg-gold/10 hover:bg-gold/20 text-gold text-xs font-semibold border border-gold/30 cursor-pointer"
+                  >
+                    Select Audio
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Steeping Steps */}
+            <div className="p-6 rounded-2xl bg-[#0c1912] border border-white/10 space-y-4">
+              <h3 className="font-serif font-bold text-base text-gold">2. 4-Step Steeping Instructions</h3>
+
+              <div className="space-y-4">
+                {(brewingGuide?.steps || []).map((step: any, idx: number) => (
+                  <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-gold font-bold text-xs">{step.num || `0${idx + 1}`}</span>
+                      <input
+                        type="text"
+                        value={step.title}
+                        onChange={(e) => {
+                          const newSteps = [...brewingGuide.steps];
+                          newSteps[idx].title = e.target.value;
+                          setBrewingGuide({ ...brewingGuide, steps: newSteps });
+                        }}
+                        className="flex-1 bg-transparent border-b border-white/10 pb-1 text-xs font-semibold text-[#F8F6F2] outline-none focus:border-gold"
+                      />
+                    </div>
+                    <textarea
+                      rows={2}
+                      value={step.summary}
+                      onChange={(e) => {
+                        const newSteps = [...brewingGuide.steps];
+                        newSteps[idx].summary = e.target.value;
+                        setBrewingGuide({ ...brewingGuide, steps: newSteps });
+                      }}
+                      className="w-full bg-transparent text-xs text-slate-300 leading-relaxed outline-none border border-white/5 rounded-lg p-2"
+                    />
                   </div>
                 ))}
               </div>
             </div>
-          )}
 
-          {/* H. GLOBAL SETTINGS VIEW */}
-          {activeTab === 'settings' && (
-            <div className="space-y-8">
-              <h2 className="text-xl font-serif text-[#F8F6F2]">Website Configurations</h2>
+            <div className="flex justify-end">
+              <button
+                onClick={async () => {
+                  await fetch('/api/brewing', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(brewingGuide)
+                  });
+                  showToast("Brewing guide updated and published!");
+                }}
+                className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-8 py-3 rounded-xl text-xs transition-all cursor-pointer shadow-lg"
+              >
+                Save &amp; Publish Brewing Guide
+              </button>
+            </div>
+          </div>
+        )}
 
-              {/* Contacts info */}
-              <div className="bg-[#0a150f] border border-white/5 rounded-xl p-6 shadow-lg space-y-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-2 border-b border-white/5">Company Contact Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Website Name</label>
-                    <input 
-                      type="text" 
-                      value={globalSettings.website_name}
-                      onChange={(e) => setGlobalSettings({ ...globalSettings, website_name: e.target.value })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Support Email</label>
-                    <input 
-                      type="email" 
-                      value={globalSettings.contact_email}
-                      onChange={(e) => setGlobalSettings({ ...globalSettings, contact_email: e.target.value })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Support Phone</label>
-                    <input 
-                      type="text" 
-                      value={globalSettings.contact_phone}
-                      onChange={(e) => setGlobalSettings({ ...globalSettings, contact_phone: e.target.value })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">WhatsApp Phone String</label>
-                    <input 
-                      type="text" 
-                      value={globalSettings.whatsapp_phone}
-                      onChange={(e) => setGlobalSettings({ ...globalSettings, whatsapp_phone: e.target.value })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                </div>
+        {/* ========================================================= */}
+        {/* 9. OUR STORY TAB */}
+        {/* ========================================================= */}
+        {activeTab === 'story' && (
+          <div className="space-y-8 max-w-4xl">
+            <div className="border-b border-white/10 pb-6">
+              <h2 className="text-2xl font-serif text-[#F8F6F2] font-bold">Our Story &amp; Heritage</h2>
+              <p className="text-xs text-slate-400 mt-1">Manage the narrative of Gaurav Singh, Jasrana origins, and the 4 trust badges.</p>
+            </div>
 
-                <div className="space-y-2">
-                  <label className="block text-[10px] text-slate-500 font-bold uppercase">Origin Address</label>
-                  <input 
-                    type="text" 
-                    value={globalSettings.address}
-                    onChange={(e) => setGlobalSettings({ ...globalSettings, address: e.target.value })}
-                    className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-xs text-slate-200 focus:outline-none"
+            <div className="p-6 rounded-2xl bg-[#0c1912] border border-white/10 space-y-4">
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Story Heading</label>
+                  <input
+                    type="text"
+                    value={ourStory?.heading || "A Small Dream from a Soldier’s Home"}
+                    onChange={(e) => setOurStory({ ...ourStory, heading: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-[#F8F6F2] outline-none focus:border-gold"
                   />
                 </div>
 
-                <div className="flex justify-end pt-2">
-                  <button 
-                    onClick={() => saveSettingsConfig('website_details', globalSettings)}
-                    className="bg-gold text-[#0c1912] font-bold text-xs px-5 py-2 rounded-lg"
-                  >
-                    Save Contacts
-                  </button>
-                </div>
-              </div>
-
-              {/* SEO and Links */}
-              <div className="bg-[#0a150f] border border-white/5 rounded-xl p-6 shadow-lg space-y-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-2 border-b border-white/5">SEO Meta &amp; Integrations</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">SEO Global Title</label>
-                    <input 
-                      type="text" 
-                      value={globalSettings.seo_title}
-                      onChange={(e) => setGlobalSettings({ ...globalSettings, seo_title: e.target.value })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Instagram URL</label>
-                    <input 
-                      type="text" 
-                      value={globalSettings.instagram_url}
-                      onChange={(e) => setGlobalSettings({ ...globalSettings, instagram_url: e.target.value })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Amazon Store Link</label>
-                    <input 
-                      type="text" 
-                      value={globalSettings.amazon_store_url}
-                      onChange={(e) => setGlobalSettings({ ...globalSettings, amazon_store_url: e.target.value })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Story Paragraph 1 (Roots)</label>
+                  <textarea
+                    rows={3}
+                    value={ourStory?.story_p1 || ""}
+                    onChange={(e) => setOurStory({ ...ourStory, story_p1: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-[#F8F6F2] outline-none focus:border-gold leading-relaxed"
+                  />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="block text-[10px] text-slate-500 font-bold uppercase">SEO Global Description</label>
-                  <textarea 
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Story Paragraph 2 (Integrity)</label>
+                  <textarea
+                    rows={3}
+                    value={ourStory?.story_p2 || ""}
+                    onChange={(e) => setOurStory({ ...ourStory, story_p2: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-[#F8F6F2] outline-none focus:border-gold leading-relaxed"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Founder Principle Quote</label>
+                  <textarea
                     rows={2}
-                    value={globalSettings.seo_description}
-                    onChange={(e) => setGlobalSettings({ ...globalSettings, seo_description: e.target.value })}
-                    className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-xs text-slate-200 focus:outline-none"
+                    value={ourStory?.founder_quote || ""}
+                    onChange={(e) => setOurStory({ ...ourStory, founder_quote: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-[#F8F6F2] outline-none focus:border-gold leading-relaxed"
                   />
-                </div>
-
-                <div className="flex justify-end pt-2">
-                  <button 
-                    onClick={() => saveSettingsConfig('website_seo_links', globalSettings)}
-                    className="bg-gold text-[#0c1912] font-bold text-xs px-5 py-2 rounded-lg"
-                  >
-                    Save SEO &amp; Links
-                  </button>
                 </div>
               </div>
             </div>
-          )}
 
-        </main>
-      </div>
+            <div className="flex justify-end">
+              <button
+                onClick={async () => {
+                  await fetch('/api/story', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(ourStory)
+                  });
+                  showToast("Our Story updated successfully!");
+                }}
+                className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-8 py-3 rounded-xl text-xs transition-all cursor-pointer shadow-lg"
+              >
+                Save &amp; Publish Story Changes
+              </button>
+            </div>
+          </div>
+        )}
 
-      {/* PRODUCT FORM MODAL */}
-      {productModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setProductModalOpen(false)} />
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="relative w-full max-w-4xl bg-[#0e2217] border border-white/10 rounded-2xl p-8 shadow-2xl z-10 max-h-[85vh] overflow-y-auto"
-          >
-            <h3 className="text-lg font-serif text-[#F8F6F2] mb-6 border-b border-white/5 pb-2">
-              {editingProduct ? 'Edit Product details' : 'Add New Product'}
-            </h3>
+        {/* ========================================================= */}
+        {/* 10. FAQS TAB */}
+        {/* ========================================================= */}
+        {activeTab === 'faqs' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+              <div>
+                <h2 className="text-2xl font-serif text-[#F8F6F2] font-bold">Frequently Asked Questions</h2>
+                <p className="text-xs text-slate-400 mt-1">Add and reorder public FAQs. Published items appear on the homepage accordion.</p>
+              </div>
 
-            <form onSubmit={handleProductSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
-                {/* Column 1: Core details */}
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Product Name</label>
-                    <input 
-                      type="text" required
-                      value={productForm.title}
-                      onChange={(e) => setProductForm({ ...productForm, title: e.target.value })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Slug (URL friendly)</label>
-                    <input 
-                      type="text" required
-                      value={productForm.slug}
-                      onChange={(e) => setProductForm({ ...productForm, slug: e.target.value })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none font-mono"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">SKU Code</label>
-                    <input 
-                      type="text"
-                      value={productForm.sku}
-                      onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none font-mono"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="block text-[10px] text-slate-500 font-bold uppercase">Weight</label>
-                      <input 
-                        type="text" required
-                        value={productForm.weight}
-                        onChange={(e) => setProductForm({ ...productForm, weight: e.target.value })}
-                        className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="block text-[10px] text-slate-500 font-bold uppercase">Stock Count</label>
-                      <input 
-                        type="number" required
-                        value={productForm.stock}
-                        onChange={(e) => setProductForm({ ...productForm, stock: parseInt(e.target.value) })}
-                        className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="block text-[10px] text-slate-500 font-bold uppercase">Sale Price (₹)</label>
-                      <input 
-                        type="number" required
-                        value={productForm.price}
-                        onChange={(e) => setProductForm({ ...productForm, price: parseFloat(e.target.value) })}
-                        className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none font-mono"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="block text-[10px] text-slate-500 font-bold uppercase">Original Price (₹)</label>
-                      <input 
-                        type="number"
-                        value={productForm.sale_price || productForm.originalPrice}
-                        onChange={(e) => setProductForm({ ...productForm, sale_price: parseFloat(e.target.value) })}
-                        className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none font-mono"
-                      />
-                    </div>
-                  </div>
-                </div>
+              <button
+                onClick={() => {
+                  setEditingFaq({
+                    question: "",
+                    answer: "",
+                    category: "General",
+                    display_order: faqs.length + 1,
+                    status: "published"
+                  });
+                  setFaqModalOpen(true);
+                }}
+                className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer shadow"
+              >
+                <Plus size={16} />
+                <span>Add FAQ</span>
+              </button>
+            </div>
 
-                {/* Column 2: Graphics and links */}
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Main Image URL</label>
-                    <input 
-                      type="text" required
-                      value={productForm.img}
-                      onChange={(e) => setProductForm({ ...productForm, img: e.target.value })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Amazon Store Listing URL</label>
-                    <input 
-                      type="text"
-                      value={productForm.amazon_url || productForm.amazonUrl}
-                      onChange={(e) => setProductForm({ ...productForm, amazon_url: e.target.value })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Category</label>
-                    <input 
-                      type="text" required
-                      value={productForm.category}
-                      onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Short Description</label>
-                    <textarea 
-                      rows={2} required
-                      value={productForm.short_description}
-                      onChange={(e) => setProductForm({ ...productForm, short_description: e.target.value })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <label className="flex items-center gap-2 text-xs text-slate-300 font-semibold cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={productForm.featured}
-                        onChange={(e) => setProductForm({ ...productForm, featured: e.target.checked })}
-                        className="accent-gold h-4 w-4 rounded border-white/10 bg-black/20" 
-                      />
-                      <span>Featured</span>
-                    </label>
-                    <div className="flex gap-2">
-                      <span className="text-[10px] text-slate-500 uppercase font-bold mt-1">Status:</span>
-                      <select 
-                        value={productForm.status}
-                        onChange={(e) => setProductForm({ ...productForm, status: e.target.value })}
-                        className="bg-black/25 border border-white/10 rounded px-2 text-[10px] text-slate-200"
+            <div className="space-y-3">
+              {faqs.map(faq => (
+                <div key={faq.id} className="p-5 rounded-2xl bg-[#0c1912] border border-white/10 space-y-2 hover:border-gold/30 transition-all">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-gold tracking-wider">{faq.category || "General"}</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingFaq(faq);
+                          setFaqModalOpen(true);
+                        }}
+                        className="text-slate-400 hover:text-white p-1 cursor-pointer"
                       >
-                        <option value="published">Published</option>
-                        <option value="draft">Draft</option>
-                        <option value="hidden">Hidden</option>
-                      </select>
+                        <Edit size={13} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setDeleteModal({
+                            open: true,
+                            title: `Delete FAQ "${faq.question}"?`,
+                            onConfirm: async () => {
+                              await fetch(`/api/faqs?id=${faq.id}`, { method: 'DELETE' });
+                              setFaqs(prev => prev.filter(x => x.id !== faq.id));
+                              showToast("FAQ removed");
+                              setDeleteModal(null);
+                            }
+                          });
+                        }}
+                        className="text-red-400 hover:text-red-300 p-1 cursor-pointer"
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   </div>
+
+                  <h3 className="font-serif font-bold text-sm text-[#F8F6F2]">{faq.question}</h3>
+                  <p className="text-xs text-slate-300 leading-relaxed">{faq.answer}</p>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-                {/* Column 3: Description, Benefits & Ingredients */}
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Full Description</label>
-                    <textarea 
-                      rows={3} required
-                      value={productForm.description}
-                      onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Benefits (Comma-separated)</label>
-                    <input 
-                      type="text"
-                      placeholder="Benefit 1, Benefit 2, Benefit 3"
-                      value={Array.isArray(productForm.benefits) ? productForm.benefits.join(', ') : ''}
-                      onChange={(e) => setProductForm({ ...productForm, benefits: e.target.value.split(',').map((x: string) => x.trim()) })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">Ingredients (Comma-separated)</label>
-                    <input 
-                      type="text"
-                      placeholder="Ingredient 1, Ingredient 2, Ingredient 3"
-                      value={Array.isArray(productForm.ingredients) ? productForm.ingredients.join(', ') : ''}
-                      onChange={(e) => setProductForm({ ...productForm, ingredients: e.target.value.split(',').map((x: string) => x.trim()) })}
-                      className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-              </div>
-
-              {/* SEO parameters */}
-              <div className="bg-black/10 border border-white/5 rounded-xl p-5 space-y-4">
-                <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">SEO Configuration</h5>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">SEO Title</label>
-                    <input 
-                      type="text"
-                      value={productForm.seo_title}
-                      onChange={(e) => setProductForm({ ...productForm, seo_title: e.target.value })}
-                      className="w-full bg-[#0c1912] border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block text-[10px] text-slate-500 font-bold uppercase">SEO Description</label>
-                    <input 
-                      type="text"
-                      value={productForm.seo_description}
-                      onChange={(e) => setProductForm({ ...productForm, seo_description: e.target.value })}
-                      className="w-full bg-[#0c1912] border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions row */}
-              <div className="flex justify-end gap-4 pt-4 border-t border-white/5">
-                <button 
-                  type="button" 
-                  onClick={() => setProductModalOpen(false)}
-                  className="bg-transparent border border-white/10 hover:bg-white/5 text-slate-300 font-semibold px-6 py-2.5 rounded-lg text-xs"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="bg-gold hover:bg-gold-hover text-[#0c1912] font-bold px-6 py-2.5 rounded-lg text-xs"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
-
-      {/* ORDER INVOICE MODAL */}
-      {orderModalOpen && activeOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setOrderModalOpen(false)} />
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="relative w-full max-w-lg bg-[#0e2217] border border-white/10 rounded-2xl p-8 shadow-2xl z-10"
-          >
-            <button 
-              onClick={() => setOrderModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white text-xl"
-            >
-              &times;
-            </button>
+        {/* ========================================================= */}
+        {/* 11. LEGAL HUB TAB */}
+        {/* ========================================================= */}
+        {activeTab === 'legal' && (
+          <div className="space-y-8 max-w-4xl">
+            <div className="border-b border-white/10 pb-6">
+              <h2 className="text-2xl font-serif text-[#F8F6F2] font-bold">Legal &amp; Transparency Policy Hub</h2>
+              <p className="text-xs text-slate-400 mt-1">Manage Privacy Policy, Terms &amp; Conditions, Shipping, Refund, and Medical Disclaimers.</p>
+            </div>
 
             <div className="space-y-6">
-              {/* Invoice header */}
-              <div className="text-center pb-4 border-b border-white/5">
-                <span className="text-gold text-[10px] uppercase font-bold tracking-widest block">Kindleaf Store Invoice</span>
-                <h3 className="text-xl font-serif text-[#F8F6F2] mt-1">Order #{(activeOrder.id).substring(0, 8)}</h3>
-                <span className="text-[10px] text-slate-500 mt-1 block">{new Date(activeOrder.created_at).toLocaleString()}</span>
-              </div>
+              {['privacy_policy', 'terms_conditions', 'shipping_policy', 'refund_policy', 'medical_disclaimer'].map((docKey) => {
+                const doc = legalContent?.[docKey] || {};
+                const titleMap: any = {
+                  privacy_policy: "Privacy Policy",
+                  terms_conditions: "Terms & Conditions",
+                  shipping_policy: "Shipping & Delivery Policy",
+                  refund_policy: "Refund & Return Policy",
+                  medical_disclaimer: "Medical & Health Disclaimer"
+                };
 
-              {/* Order content */}
-              <div className="space-y-3.5">
-                <h5 className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Item details</h5>
-                <div className="flex justify-between items-center text-xs">
-                  <div>
-                    <span className="block text-[#F8F6F2] font-semibold">{activeOrder.product_title}</span>
-                    <span className="text-[10px] text-slate-500">Quantity: {activeOrder.quantity}</span>
+                return (
+                  <div key={docKey} className="p-6 rounded-2xl bg-[#0c1912] border border-white/10 space-y-4">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                      <h3 className="font-serif font-bold text-base text-[#F8F6F2]">{titleMap[docKey]}</h3>
+                      <span className="text-[10px] text-slate-400">Last updated: {doc.last_updated || 'August 2026'}</span>
+                    </div>
+
+                    <div className="space-y-3">
+                      {(doc.sections || []).map((sec: any, sIdx: number) => (
+                        <div key={sIdx} className="p-3.5 rounded-xl bg-white/5 space-y-2">
+                          <input
+                            type="text"
+                            value={sec.title}
+                            onChange={(e) => {
+                              const updated = { ...legalContent };
+                              updated[docKey].sections[sIdx].title = e.target.value;
+                              setLegalContent(updated);
+                            }}
+                            className="w-full bg-transparent text-xs font-bold text-gold outline-none border-b border-white/10 pb-1"
+                          />
+                          <textarea
+                            rows={3}
+                            value={sec.content}
+                            onChange={(e) => {
+                              const updated = { ...legalContent };
+                              updated[docKey].sections[sIdx].content = e.target.value;
+                              setLegalContent(updated);
+                            }}
+                            className="w-full bg-transparent text-xs text-slate-300 leading-relaxed outline-none"
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <span className="text-gold font-bold">₹{activeOrder.total_price}</span>
+                );
+              })}
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={async () => {
+                  await fetch('/api/legal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(legalContent)
+                  });
+                  showToast("Legal documents updated on live site!");
+                }}
+                className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-8 py-3 rounded-xl text-xs transition-all cursor-pointer shadow-lg"
+              >
+                Save &amp; Publish Legal Hub
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* 12. SEO METADATA TAB */}
+        {/* ========================================================= */}
+        {activeTab === 'seo' && (
+          <div className="space-y-8 max-w-4xl">
+            <div className="border-b border-white/10 pb-6">
+              <h2 className="text-2xl font-serif text-[#F8F6F2] font-bold">SEO &amp; Social Meta Management</h2>
+              <p className="text-xs text-slate-400 mt-1">Configure search titles, meta descriptions, and OG share images for Google and social previews.</p>
+            </div>
+
+            {['home', 'journal', 'legal'].map(page => (
+              <div key={page} className="p-6 rounded-2xl bg-[#0c1912] border border-white/10 space-y-4">
+                <h3 className="font-serif font-bold text-base text-gold uppercase tracking-wider text-xs">
+                  {page} Page SEO
+                </h3>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">SEO Title Tag</label>
+                    <input
+                      type="text"
+                      value={seoSettings?.[page]?.title || ""}
+                      onChange={(e) => setSeoSettings({
+                        ...seoSettings,
+                        [page]: { ...seoSettings[page], title: e.target.value }
+                      })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Meta Description</label>
+                    <textarea
+                      rows={2}
+                      value={seoSettings?.[page]?.description || ""}
+                      onChange={(e) => setSeoSettings({
+                        ...seoSettings,
+                        [page]: { ...seoSettings[page], description: e.target.value }
+                      })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold leading-relaxed"
+                    />
+                  </div>
                 </div>
               </div>
+            ))}
 
-              {/* Customer details */}
-              <div className="space-y-3.5 pt-4 border-t border-white/5">
-                <h5 className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Shipping Details</h5>
-                <ul className="text-xs space-y-2 text-slate-300">
-                  <li className="flex justify-between"><span className="text-slate-500">Name:</span> <span className="font-semibold">{activeOrder.customer_name}</span></li>
-                  <li className="flex justify-between"><span className="text-slate-500">Phone:</span> <span className="font-semibold">{activeOrder.customer_phone || 'N/A'}</span></li>
-                  <li className="flex justify-between"><span className="text-slate-500">Email:</span> <span className="font-semibold">{activeOrder.customer_email || 'N/A'}</span></li>
-                  <li className="flex flex-col gap-1 pt-1"><span className="text-slate-500">Address:</span> <span className="p-3 bg-black/25 rounded border border-white/5 text-[11px] leading-relaxed">{activeOrder.shipping_address}</span></li>
-                </ul>
+            <div className="flex justify-end">
+              <button
+                onClick={async () => {
+                  await fetch('/api/seo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(seoSettings)
+                  });
+                  showToast("SEO settings updated!");
+                }}
+                className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-8 py-3 rounded-xl text-xs transition-all cursor-pointer shadow-lg"
+              >
+                Save SEO Metadata
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* 13. APP SETTINGS TAB */}
+        {/* ========================================================= */}
+        {activeTab === 'app' && (
+          <div className="space-y-8 max-w-4xl">
+            <div className="border-b border-white/10 pb-6">
+              <h2 className="text-2xl font-serif text-[#F8F6F2] font-bold">App Store &amp; Deep Link Settings</h2>
+              <p className="text-xs text-slate-400 mt-1">Manage official application links and default download button copy without editing code.</p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-[#0c1912] border border-white/10 space-y-4">
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Application Name</label>
+                  <input
+                    type="text"
+                    value={appSettings?.app_name || "Kindleaf: Handcrafted Herbal Tea"}
+                    onChange={(e) => setAppSettings({ ...appSettings, app_name: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Custom Deep Link Scheme</label>
+                  <input
+                    type="text"
+                    value={appSettings?.deep_link || "kindleaf://open"}
+                    onChange={(e) => setAppSettings({ ...appSettings, deep_link: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] font-mono outline-none focus:border-gold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Google Play Store URL</label>
+                  <input
+                    type="text"
+                    value={appSettings?.play_store_url || ""}
+                    onChange={(e) => setAppSettings({ ...appSettings, play_store_url: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] font-mono outline-none focus:border-gold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Apple App Store URL</label>
+                  <input
+                    type="text"
+                    value={appSettings?.app_store_url || ""}
+                    onChange={(e) => setAppSettings({ ...appSettings, app_store_url: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] font-mono outline-none focus:border-gold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Default App CTA Button Label</label>
+                  <input
+                    type="text"
+                    value={appSettings?.default_cta || "GET THE KINDLEAF APP"}
+                    onChange={(e) => setAppSettings({ ...appSettings, default_cta: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={async () => {
+                  await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: 'app_settings', value: appSettings })
+                  });
+                  showToast("App settings updated successfully!");
+                }}
+                className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-8 py-3 rounded-xl text-xs transition-all cursor-pointer shadow-lg"
+              >
+                Save App Settings
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* 14. SOCIAL LINKS TAB */}
+        {/* ========================================================= */}
+        {activeTab === 'social' && (
+          <div className="space-y-8 max-w-4xl">
+            <div className="border-b border-white/10 pb-6">
+              <h2 className="text-2xl font-serif text-[#F8F6F2] font-bold">Social Media Channels</h2>
+              <p className="text-xs text-slate-400 mt-1">Update external brand links displayed in the footer and contact sections.</p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-[#0c1912] border border-white/10 space-y-4">
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Facebook Page URL</label>
+                  <input
+                    type="text"
+                    value={socialLinks?.facebook_url || "https://www.facebook.com/share/1EELT4gBjW/"}
+                    onChange={(e) => setSocialLinks({ ...socialLinks, facebook_url: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] font-mono outline-none focus:border-gold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Instagram URL</label>
+                  <input
+                    type="text"
+                    value={socialLinks?.instagram_url || "https://instagram.com/kindleaf.wellness"}
+                    onChange={(e) => setSocialLinks({ ...socialLinks, instagram_url: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] font-mono outline-none focus:border-gold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">WhatsApp Customer Desk Number</label>
+                  <input
+                    type="text"
+                    value={socialLinks?.whatsapp_phone || "916396461480"}
+                    onChange={(e) => setSocialLinks({ ...socialLinks, whatsapp_phone: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] font-mono outline-none focus:border-gold"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={async () => {
+                  await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: 'social_links', value: socialLinks })
+                  });
+                  showToast("Social links updated across the website!");
+                }}
+                className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-8 py-3 rounded-xl text-xs transition-all cursor-pointer shadow-lg"
+              >
+                Save Social Links
+              </button>
+            </div>
+          </div>
+        )}
+
+      </main>
+
+      {/* ========================================================= */}
+      {/* GLOBAL REUSABLE MODALS */}
+      {/* ========================================================= */}
+
+      {/* 1. MEDIA PICKER MODAL */}
+      <AnimatePresence>
+        {mediaPickerOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMediaPickerOpen(false)} className="fixed inset-0 bg-black/80 backdrop-blur-md" />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-3xl bg-[#0c1912] border border-white/15 rounded-3xl p-6 shadow-2xl z-10 max-h-[85vh] flex flex-col">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div>
+                  <h3 className="font-serif font-bold text-lg text-[#F8F6F2]">Select from Media Library</h3>
+                  <p className="text-xs text-slate-400">Choose an existing media file or upload a new one directly</p>
+                </div>
+                <button onClick={() => setMediaPickerOpen(false)} className="p-2 text-slate-400 hover:text-white cursor-pointer"><X size={18} /></button>
               </div>
 
-              {/* Order Status footer actions */}
-              <div className="flex items-center justify-between pt-6 border-t border-white/5">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-slate-500 uppercase font-bold">Status:</span>
-                  <select 
-                    value={activeOrder.status}
-                    onChange={(e) => {
-                      updateStatus(activeOrder.id, e.target.value);
-                      setActiveOrder({ ...activeOrder, status: e.target.value });
+              <div className="py-4 flex items-center justify-between gap-4">
+                <input
+                  type="file"
+                  onChange={(e) => handleFileUpload(e)}
+                  className="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-gold file:text-[#0c1912] hover:file:bg-gold-hover cursor-pointer"
+                />
+              </div>
+
+              <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-1">
+                {mediaItems.map(item => (
+                  <div
+                    key={item.id}
+                    onClick={() => {
+                      if (mediaPickerCallback) mediaPickerCallback(item.url);
+                      setMediaPickerOpen(false);
                     }}
-                    className="bg-black/25 border border-white/10 rounded px-2 py-1 text-xs text-slate-200"
+                    className="p-2 rounded-xl bg-white/5 hover:bg-[#163322] border border-white/10 hover:border-gold cursor-pointer transition-all flex flex-col justify-between group"
                   >
-                    <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
-                    <option value="shipped">Shipped</option>
-                    <option value="delivered">Delivered</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
+                    <div className="aspect-square rounded-lg bg-black/30 flex items-center justify-center overflow-hidden">
+                      {item.mime_type?.startsWith('audio/') ? <Music size={24} className="text-gold" /> : <img src={item.url} alt={item.filename} className="max-h-full max-w-full object-contain" />}
+                    </div>
+                    <span className="text-[11px] text-slate-300 truncate mt-2 block group-hover:text-gold">{item.filename}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 2. DELETE SAFETY CONFIRMATION MODAL */}
+      <AnimatePresence>
+        {deleteModal?.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDeleteModal(null)} className="fixed inset-0 bg-black/80 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md bg-[#0e2417] border border-red-500/30 rounded-2xl p-6 shadow-2xl z-10 space-y-4">
+              <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+                <AlertTriangle size={22} />
+              </div>
+              <div>
+                <h3 className="font-serif font-bold text-lg text-[#F8F6F2]">{deleteModal.title}</h3>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">This action cannot be undone. The content will be immediately removed from the live website.</p>
+              </div>
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button onClick={() => setDeleteModal(null)} className="px-4 py-2 rounded-xl text-xs text-slate-300 hover:text-white bg-white/5 cursor-pointer">Cancel</button>
+                <button onClick={deleteModal.onConfirm} className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 cursor-pointer shadow">Confirm Delete</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 3. PRODUCT EDIT / ADD MODAL */}
+      <AnimatePresence>
+        {productModalOpen && editingProduct && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setProductModalOpen(false)} className="fixed inset-0 bg-black/80 backdrop-blur-md" />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-3xl bg-[#0c1912] border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 max-h-[90vh] overflow-y-auto space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <h3 className="font-serif font-bold text-xl text-[#F8F6F2]">
+                  {editingProduct.id ? 'Edit Product' : 'Add New Product'}
+                </h3>
+                <button onClick={() => setProductModalOpen(false)} className="p-2 text-slate-400 hover:text-white cursor-pointer"><X size={20} /></button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Product Title</label>
+                  <input
+                    type="text"
+                    value={editingProduct.title || ""}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, title: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
                 </div>
-                <button 
-                  onClick={() => setOrderModalOpen(false)}
-                  className="bg-gold text-[#0c1912] font-bold text-xs px-5 py-2 rounded-lg"
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Slug (URL)</label>
+                  <input
+                    type="text"
+                    value={editingProduct.slug || ""}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, slug: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Net Weight / Pack Size</label>
+                  <input
+                    type="text"
+                    value={editingProduct.weight || "50g Pouch"}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, weight: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Category / Variant</label>
+                  <input
+                    type="text"
+                    value={editingProduct.category || "Single Pack"}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Short Description</label>
+                <input
+                  type="text"
+                  value={editingProduct.short_description || ""}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, short_description: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Full Description</label>
+                <textarea
+                  rows={3}
+                  value={editingProduct.description || ""}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold leading-relaxed"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Product Main Image URL</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={editingProduct.img || ""}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, img: e.target.value })}
+                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => openMediaPicker((url) => setEditingProduct({ ...editingProduct, img: url }))}
+                    className="px-4 py-2 rounded-xl bg-gold/10 hover:bg-gold/20 text-gold text-xs font-semibold border border-gold/30 cursor-pointer"
+                  >
+                    Select Media
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Taste Profile Notes</label>
+                  <input
+                    type="text"
+                    value={editingProduct.taste_profile || ""}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, taste_profile: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">FSSAI Status</label>
+                  <input
+                    type="text"
+                    value={editingProduct.fssai_info || "FSSAI Licensed Food Business"}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, fssai_info: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-6 pt-2">
+                <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editingProduct.status === 'published'}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, status: e.target.checked ? 'published' : 'draft' })}
+                    className="rounded text-gold focus:ring-0"
+                  />
+                  <span>Published on Live Website</span>
+                </label>
+                <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editingProduct.featured || false}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, featured: e.target.checked })}
+                    className="rounded text-gold focus:ring-0"
+                  />
+                  <span>Featured Product</span>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                <button onClick={() => setProductModalOpen(false)} className="px-5 py-2.5 rounded-xl text-xs text-slate-300 hover:text-white bg-white/5 cursor-pointer">Cancel</button>
+                <button
+                  onClick={async () => {
+                    const res = await fetch('/api/products', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(editingProduct)
+                    });
+                    const saved = await res.json();
+                    setProducts(prev => {
+                      const idx = prev.findIndex(p => p.id === saved.id);
+                      if (idx >= 0) {
+                        const copy = [...prev];
+                        copy[idx] = saved;
+                        return copy;
+                      }
+                      return [saved, ...prev];
+                    });
+                    showToast("Product saved & published!");
+                    setProductModalOpen(false);
+                  }}
+                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-[#0c1912] bg-gold hover:bg-gold-hover cursor-pointer shadow"
                 >
-                  Close Invoice
+                  Save &amp; Publish
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
-            </div>
-          </motion.div>
-        </div>
-      )}
+      {/* 4. JOURNAL EDIT / ADD MODAL */}
+      <AnimatePresence>
+        {journalModalOpen && editingJournal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setJournalModalOpen(false)} className="fixed inset-0 bg-black/80 backdrop-blur-md" />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-3xl bg-[#0c1912] border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 max-h-[90vh] overflow-y-auto space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <h3 className="font-serif font-bold text-xl text-[#F8F6F2]">
+                  {editingJournal.id ? 'Edit Story / Article' : 'Write New Story'}
+                </h3>
+                <button onClick={() => setJournalModalOpen(false)} className="p-2 text-slate-400 hover:text-white cursor-pointer"><X size={20} /></button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Article Title</label>
+                  <input
+                    type="text"
+                    value={editingJournal.title || ""}
+                    onChange={(e) => setEditingJournal({ ...editingJournal, title: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Slug</label>
+                  <input
+                    type="text"
+                    value={editingJournal.slug || ""}
+                    onChange={(e) => setEditingJournal({ ...editingJournal, slug: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Category</label>
+                  <select
+                    value={editingJournal.category || "Tea Rituals"}
+                    onChange={(e) => setEditingJournal({ ...editingJournal, category: e.target.value })}
+                    className="w-full bg-[#163322] border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  >
+                    <option value="Tea Rituals">Tea Rituals</option>
+                    <option value="Herbal Ingredients">Herbal Ingredients</option>
+                    <option value="Brewing">Brewing</option>
+                    <option value="Kindleaf Story">Kindleaf Story</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Author Name</label>
+                  <input
+                    type="text"
+                    value={editingJournal.author || "Kindleaf Herbalist"}
+                    onChange={(e) => setEditingJournal({ ...editingJournal, author: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Featured Cover Image URL</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={editingJournal.coverImage || ""}
+                    onChange={(e) => setEditingJournal({ ...editingJournal, coverImage: e.target.value })}
+                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] font-mono outline-none focus:border-gold"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => openMediaPicker((url) => setEditingJournal({ ...editingJournal, coverImage: url }))}
+                    className="px-4 py-2 rounded-xl bg-gold/10 hover:bg-gold/20 text-gold text-xs font-semibold border border-gold/30 cursor-pointer"
+                  >
+                    Select Media
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Excerpt (Summary)</label>
+                <textarea
+                  rows={2}
+                  value={editingJournal.excerpt || ""}
+                  onChange={(e) => setEditingJournal({ ...editingJournal, excerpt: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold leading-relaxed"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Full Content (Each paragraph separated by a blank line)</label>
+                <textarea
+                  rows={6}
+                  value={Array.isArray(editingJournal.content) ? editingJournal.content.join('\n\n') : (editingJournal.content || '')}
+                  onChange={(e) => setEditingJournal({
+                    ...editingJournal,
+                    content: e.target.value.split('\n\n').filter(Boolean)
+                  })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold leading-relaxed font-sans"
+                />
+              </div>
+
+              <div className="flex items-center gap-6 pt-2">
+                <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editingJournal.status === 'published'}
+                    onChange={(e) => setEditingJournal({ ...editingJournal, status: e.target.checked ? 'published' : 'draft' })}
+                    className="rounded text-gold focus:ring-0"
+                  />
+                  <span>Published in Journal &amp; Homepage</span>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                <button onClick={() => setJournalModalOpen(false)} className="px-5 py-2.5 rounded-xl text-xs text-slate-300 hover:text-white bg-white/5 cursor-pointer">Cancel</button>
+                <button
+                  onClick={async () => {
+                    const res = await fetch('/api/journal', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(editingJournal)
+                    });
+                    const saved = await res.json();
+                    setJournalArticles(prev => {
+                      const idx = prev.findIndex(a => a.id === saved.id);
+                      if (idx >= 0) {
+                        const copy = [...prev];
+                        copy[idx] = saved;
+                        return copy;
+                      }
+                      return [saved, ...prev];
+                    });
+                    showToast("Article published successfully!");
+                    setJournalModalOpen(false);
+                  }}
+                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-[#0c1912] bg-gold hover:bg-gold-hover cursor-pointer shadow"
+                >
+                  Save &amp; Publish Article
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 5. OFFER EDIT / ADD MODAL */}
+      <AnimatePresence>
+        {offerModalOpen && editingOffer && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOfferModalOpen(false)} className="fixed inset-0 bg-black/80 backdrop-blur-md" />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-xl bg-[#0c1912] border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 space-y-4">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="font-serif font-bold text-lg text-[#F8F6F2]">
+                  {editingOffer.id ? 'Edit Offer Banner' : 'Create Offer Banner'}
+                </h3>
+                <button onClick={() => setOfferModalOpen(false)} className="p-2 text-slate-400 hover:text-white cursor-pointer"><X size={18} /></button>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Offer Title</label>
+                <input
+                  type="text"
+                  value={editingOffer.title || ""}
+                  onChange={(e) => setEditingOffer({ ...editingOffer, title: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Offer Subtext / Description</label>
+                <textarea
+                  rows={2}
+                  value={editingOffer.description || ""}
+                  onChange={(e) => setEditingOffer({ ...editingOffer, description: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold leading-relaxed"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Button CTA Text</label>
+                  <input
+                    type="text"
+                    value={editingOffer.cta_text || "GET THE KINDLEAF APP"}
+                    onChange={(e) => setEditingOffer({ ...editingOffer, cta_text: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">End Date</label>
+                  <input
+                    type="date"
+                    value={editingOffer.end_date || ""}
+                    onChange={(e) => setEditingOffer({ ...editingOffer, end_date: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-6 pt-2">
+                <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editingOffer.active !== false}
+                    onChange={(e) => setEditingOffer({ ...editingOffer, active: e.target.checked })}
+                    className="rounded text-gold focus:ring-0"
+                  />
+                  <span>Active &amp; Displaying on Homepage</span>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                <button onClick={() => setOfferModalOpen(false)} className="px-4 py-2 rounded-xl text-xs text-slate-300 hover:text-white bg-white/5 cursor-pointer">Cancel</button>
+                <button
+                  onClick={async () => {
+                    const res = await fetch('/api/offers', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(editingOffer)
+                    });
+                    const saved = await res.json();
+                    setOffers(prev => {
+                      const idx = prev.findIndex(o => o.id === saved.id);
+                      if (idx >= 0) {
+                        const copy = [...prev];
+                        copy[idx] = saved;
+                        return copy;
+                      }
+                      return [saved, ...prev];
+                    });
+                    showToast("Offer saved successfully!");
+                    setOfferModalOpen(false);
+                  }}
+                  className="px-6 py-2 rounded-xl text-xs font-bold text-[#0c1912] bg-gold hover:bg-gold-hover cursor-pointer shadow"
+                >
+                  Save &amp; Publish Offer
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 6. BOTANICAL INGREDIENT EDIT MODAL */}
+      <AnimatePresence>
+        {ingredientModalOpen && editingIngredient && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIngredientModalOpen(false)} className="fixed inset-0 bg-black/80 backdrop-blur-md" />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-xl bg-[#0c1912] border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 space-y-4">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="font-serif font-bold text-lg text-[#F8F6F2]">
+                  {editingIngredient.id ? 'Edit Botanical' : 'Add Botanical'}
+                </h3>
+                <button onClick={() => setIngredientModalOpen(false)} className="p-2 text-slate-400 hover:text-white cursor-pointer"><X size={18} /></button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Common Name</label>
+                  <input
+                    type="text"
+                    value={editingIngredient.name || ""}
+                    onChange={(e) => setEditingIngredient({ ...editingIngredient, name: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Botanical Name (Latin)</label>
+                  <input
+                    type="text"
+                    value={editingIngredient.botanical || ""}
+                    onChange={(e) => setEditingIngredient({ ...editingIngredient, botanical: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold font-serif italic"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Role in Blend</label>
+                <input
+                  type="text"
+                  value={editingIngredient.role || ""}
+                  onChange={(e) => setEditingIngredient({ ...editingIngredient, role: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Flavour &amp; Aroma Description</label>
+                <textarea
+                  rows={2}
+                  value={editingIngredient.flavorAroma || ""}
+                  onChange={(e) => setEditingIngredient({ ...editingIngredient, flavorAroma: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold leading-relaxed"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                <button onClick={() => setIngredientModalOpen(false)} className="px-4 py-2 rounded-xl text-xs text-slate-300 hover:text-white bg-white/5 cursor-pointer">Cancel</button>
+                <button
+                  onClick={async () => {
+                    const res = await fetch('/api/ingredients', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(editingIngredient)
+                    });
+                    const saved = await res.json();
+                    setIngredients(prev => {
+                      const idx = prev.findIndex(i => i.id === saved.id);
+                      if (idx >= 0) {
+                        const copy = [...prev];
+                        copy[idx] = saved;
+                        return copy;
+                      }
+                      return [...prev, saved];
+                    });
+                    showToast("Botanical saved!");
+                    setIngredientModalOpen(false);
+                  }}
+                  className="px-6 py-2 rounded-xl text-xs font-bold text-[#0c1912] bg-gold hover:bg-gold-hover cursor-pointer shadow"
+                >
+                  Save Botanical
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 7. FAQ EDIT MODAL */}
+      <AnimatePresence>
+        {faqModalOpen && editingFaq && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setFaqModalOpen(false)} className="fixed inset-0 bg-black/80 backdrop-blur-md" />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-lg bg-[#0c1912] border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 space-y-4">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="font-serif font-bold text-lg text-[#F8F6F2]">
+                  {editingFaq.id ? 'Edit FAQ' : 'Add FAQ'}
+                </h3>
+                <button onClick={() => setFaqModalOpen(false)} className="p-2 text-slate-400 hover:text-white cursor-pointer"><X size={18} /></button>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Question</label>
+                <input
+                  type="text"
+                  value={editingFaq.question || ""}
+                  onChange={(e) => setEditingFaq({ ...editingFaq, question: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Category</label>
+                <input
+                  type="text"
+                  value={editingFaq.category || "General"}
+                  onChange={(e) => setEditingFaq({ ...editingFaq, category: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Answer</label>
+                <textarea
+                  rows={4}
+                  value={editingFaq.answer || ""}
+                  onChange={(e) => setEditingFaq({ ...editingFaq, answer: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold leading-relaxed"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                <button onClick={() => setFaqModalOpen(false)} className="px-4 py-2 rounded-xl text-xs text-slate-300 hover:text-white bg-white/5 cursor-pointer">Cancel</button>
+                <button
+                  onClick={async () => {
+                    const res = await fetch('/api/faqs', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(editingFaq)
+                    });
+                    const saved = await res.json();
+                    setFaqs(prev => {
+                      const idx = prev.findIndex(f => f.id === saved.id);
+                      if (idx >= 0) {
+                        const copy = [...prev];
+                        copy[idx] = saved;
+                        return copy;
+                      }
+                      return [...prev, saved];
+                    });
+                    showToast("FAQ saved successfully!");
+                    setFaqModalOpen(false);
+                  }}
+                  className="px-6 py-2 rounded-xl text-xs font-bold text-[#0c1912] bg-gold hover:bg-gold-hover cursor-pointer shadow"
+                >
+                  Save FAQ
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 8. LIVE COMPONENT PREVIEW MODAL */}
+      <AnimatePresence>
+        {previewModal?.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPreviewModal(null)} className="fixed inset-0 bg-black/85 backdrop-blur-md" />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-3xl bg-[#0c1912] border border-gold/40 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 max-h-[90vh] overflow-y-auto space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-2 text-gold">
+                  <Eye size={18} />
+                  <span className="font-serif font-bold text-base text-[#F8F6F2]">Component Preview</span>
+                </div>
+                <button onClick={() => setPreviewModal(null)} className="p-2 text-slate-400 hover:text-white cursor-pointer"><X size={20} /></button>
+              </div>
+
+              {previewModal.type === 'product' && (
+                <div className="p-6 rounded-2xl bg-[#0e2417] border border-white/10 space-y-4">
+                  <div className="flex items-center gap-6">
+                    <img src={previewModal.data.img || '/assets/product_natural.png'} alt={previewModal.data.title} className="w-24 h-24 object-contain rounded-xl bg-[#0c1912] p-2 border border-white/10" />
+                    <div>
+                      <span className="text-gold text-xs font-semibold uppercase">{previewModal.data.category || "Herbal Tea"}</span>
+                      <h4 className="font-serif font-bold text-xl text-[#F8F6F2]">{previewModal.data.title}</h4>
+                      <p className="text-xs text-slate-400 mt-1 font-mono">Net Wt: {previewModal.data.weight}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed">{previewModal.data.description}</p>
+                </div>
+              )}
+
+              {previewModal.type === 'journal' && (
+                <div className="space-y-4">
+                  <div className="aspect-16/9 rounded-2xl overflow-hidden bg-black/40">
+                    <img src={previewModal.data.coverImage || '/assets/hero_tea_cup.png'} alt={previewModal.data.title} className="w-full h-full object-cover" />
+                  </div>
+                  <span className="text-gold text-xs font-semibold uppercase">{previewModal.data.category}</span>
+                  <h4 className="font-serif font-bold text-2xl text-[#F8F6F2]">{previewModal.data.title}</h4>
+                  <div className="space-y-3 pt-2 text-xs text-slate-300 leading-relaxed">
+                    {Array.isArray(previewModal.data.content) 
+                      ? previewModal.data.content.map((p: string, i: number) => <p key={i}>{p}</p>)
+                      : <p>{previewModal.data.content}</p>
+                    }
+                  </div>
+                </div>
+              )}
+
+              {previewModal.type === 'offer' && (
+                <div className="p-5 rounded-2xl bg-gradient-to-r from-[#163322] to-[#0e2417] border border-gold/40 flex items-center justify-between gap-4">
+                  <div>
+                    <span className="text-[10px] text-gold uppercase font-bold tracking-wider">Announcement Preview</span>
+                    <h4 className="font-serif font-bold text-base text-[#F8F6F2]">{previewModal.data.title}</h4>
+                    <p className="text-xs text-slate-300 mt-0.5">{previewModal.data.description}</p>
+                  </div>
+                  <span className="bg-gold text-[#0c1912] text-xs font-bold px-4 py-2 rounded-xl shrink-0">
+                    {previewModal.data.cta_text || "GET THE APP"}
+                  </span>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

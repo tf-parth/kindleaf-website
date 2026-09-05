@@ -3,9 +3,36 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Play, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 
+interface BrewingGuideProps {
+  config?: any;
+}
+
+const DEFAULT_STEPS = [
+  {
+    num: "01",
+    title: "Heat Water to ~85°C",
+    summary: "Bring fresh water to a gentle bubble, not a violent rolling boil. Overly hot water scorches delicate green tea leaves, masking subtle citrus and floral notes."
+  },
+  {
+    num: "02",
+    title: "Measure 1 Teaspoon (~2g)",
+    summary: "Place one level teaspoon of whole-cut Kindleaf herbal blend into your cup or infuser basket. Notice the fragrant aroma of dried tulsi and lemongrass."
+  },
+  {
+    num: "03",
+    title: "Steep Covered for 3–5 Minutes",
+    summary: "Pour hot water over the botanicals and cover immediately with a lid or saucer to trap the beneficial aromatic essential oils as leaves expand."
+  },
+  {
+    num: "04",
+    title: "Inhale the Steam & Sip Mindfully",
+    summary: "Strain the leaves. Inhale the warm, uplifting citrus and ginger steam. Take your first sip and enjoy a moment of mindful pause."
+  }
+];
+
 const TARGET_VOLUME = 0.09; // 9% ambient volume (within 8–10%)
 
-export default function BrewingGuide() {
+export default function BrewingGuide({ config }: BrewingGuideProps = {}) {
   // Brewing Simulator States
   const [isBrewing, setIsBrewing] = useState(false);
   const [timerText, setTimerText] = useState('03:00');
@@ -48,7 +75,8 @@ export default function BrewingGuide() {
   // Single audio instance & section observer setup
   useEffect(() => {
     // Create single persistent audio instance without autoplay
-    const audio = new Audio('/audio/brewing-ambient.mpeg');
+    const audioSrc = config?.audio_url || '/audio/brewing-ambient.mpeg';
+    const audio = new Audio(audioSrc);
     audio.loop = true;
     audio.volume = TARGET_VOLUME;
     audio.preload = 'none';
@@ -177,28 +205,7 @@ export default function BrewingGuide() {
     stopAudioWithFade();
   };
 
-  const steps = [
-    {
-      num: "01",
-      title: "Heat Water to ~85°C",
-      summary: "Bring fresh water to a gentle bubble, not a violent rolling boil. Overly hot water scorches delicate green tea leaves, masking subtle citrus and floral notes."
-    },
-    {
-      num: "02",
-      title: "Measure 1 Teaspoon (~2g)",
-      summary: "Place one level teaspoon of whole-cut Kindleaf herbal blend into your cup or infuser basket. Notice the fragrant aroma of dried tulsi and lemongrass."
-    },
-    {
-      num: "03",
-      title: "Steep Covered for 3–5 Minutes",
-      summary: "Pour hot water over the botanicals and cover immediately with a lid or saucer to trap the beneficial aromatic essential oils as leaves expand."
-    },
-    {
-      num: "04",
-      title: "Inhale the Steam & Sip Mindfully",
-      summary: "Strain the leaves. Inhale the warm, uplifting citrus and ginger steam. Take your first sip and enjoy a moment of mindful pause."
-    }
-  ];
+  const steps = (config?.steps && config.steps.length > 0) ? config.steps : DEFAULT_STEPS;
 
   return (
     <section id="brewing" ref={sectionRef} className="py-24 bg-[#0c1912] relative">
@@ -207,13 +214,13 @@ export default function BrewingGuide() {
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-16">
           <span className="text-gold text-xs font-semibold uppercase tracking-widest block mb-3">
-            The Art of Tea
+            {config?.category || 'The Art of Tea'}
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#F8F6F2] mb-4">
-            How to Brew the Perfect Cup
+            {config?.heading || 'How to Brew the Perfect Cup'}
           </h2>
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-            A mindful brew unlocks the full botanical synergy of Green Tea, Tulsi, Lemongrass, and Ginger. Follow four simple steps for clean, aromatic flavour.
+            {config?.description || 'A mindful brew unlocks the full botanical synergy of Green Tea, Tulsi, Lemongrass, and Ginger. Follow four simple steps for clean, aromatic flavour.'}
           </p>
         </div>
 
@@ -324,7 +331,7 @@ export default function BrewingGuide() {
 
           {/* 4 Step Brewing Flow */}
           <div className="lg:col-span-7 space-y-6">
-            {steps.map((step, idx) => {
+            {steps.map((step: any, idx: number) => {
               const isCurrent = activeStep === idx + 1;
               return (
                 <div 
@@ -360,7 +367,7 @@ export default function BrewingGuide() {
               <span className="text-2xl shrink-0">💡</span>
               <p className="text-xs text-slate-300 leading-relaxed">
                 <strong className="text-gold block mb-0.5">Golden Rule of Herbal Green Tea:</strong>
-                Never leave whole green tea leaves steeping indefinitely in the cup. Straining after 3–5 minutes prevents bitterness and keeps every refill fragrant.
+                {config?.golden_rule || 'Never leave whole green tea leaves steeping indefinitely in the cup. Straining after 3–5 minutes prevents bitterness and keeps every refill fragrant.'}
               </p>
             </div>
           </div>

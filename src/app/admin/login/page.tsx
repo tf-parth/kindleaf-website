@@ -42,6 +42,13 @@ export default function AdminLogin() {
           throw new Error('Access denied: Unauthorized admin role');
         }
 
+        localStorage.setItem('admin_session', JSON.stringify({
+          email: data.user?.email || email,
+          role: 'admin',
+          token: data.session?.access_token || 'sb-token',
+          loginTime: Date.now()
+        }));
+
         router.push('/admin/dashboard');
       } else {
         // 2. Mock Mode Fallback

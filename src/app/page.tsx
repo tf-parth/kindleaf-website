@@ -16,11 +16,19 @@ import FAQSection from '@/components/FAQSection';
 import ContactSection from '@/components/ContactSection';
 import Footer from '@/components/Footer';
 import AppDownloadModal from '@/components/AppDownloadModal';
+import OfferBanner from '@/components/OfferBanner';
 import { openKindleafApp } from '@/lib/constants';
 
 export default function KindleafOfficialWebsite() {
   // Dynamic Content & Products from Supabase / Mock Fallback
   const [products, setProducts] = useState<any[]>([]);
+  const [offers, setOffers] = useState<any[]>([]);
+  const [ingredients, setIngredients] = useState<any[]>([]);
+  const [faqs, setFaqs] = useState<any[]>([]);
+  const [journalArticles, setJournalArticles] = useState<any[]>([]);
+  const [brewingConfig, setBrewingConfig] = useState<any>(null);
+  const [storyContent, setStoryContent] = useState<any>(null);
+
   const [settings, setSettings] = useState<any>({
     website_name: "Kindleaf",
     logo_url: "/assets/logo.png",
@@ -57,6 +65,54 @@ export default function KindleafOfficialWebsite() {
         }
       })
       .catch((err) => console.error("Error loading settings:", err));
+
+    // Fetch active offers
+    fetch('/api/offers')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setOffers(data);
+      })
+      .catch(() => {});
+
+    // Fetch botanical ingredients
+    fetch('/api/ingredients')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setIngredients(data);
+      })
+      .catch(() => {});
+
+    // Fetch FAQs
+    fetch('/api/faqs')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setFaqs(data);
+      })
+      .catch(() => {});
+
+    // Fetch Journal articles
+    fetch('/api/journal')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setJournalArticles(data);
+      })
+      .catch(() => {});
+
+    // Fetch Brewing Guide config
+    fetch('/api/brewing')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Object.keys(data).length > 0) setBrewingConfig(data);
+      })
+      .catch(() => {});
+
+    // Fetch Our Story content
+    fetch('/api/story')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Object.keys(data).length > 0) setStoryContent(data);
+      })
+      .catch(() => {});
   }, []);
 
   const handleOpenProduct = (product: any) => {
@@ -77,14 +133,28 @@ export default function KindleafOfficialWebsite() {
     setIsAppModalOpen(true);
   };
 
+  const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const activeOffer = offers.find((o) => o.active) || offers[0] || null;
+  const isBannerVisible = Boolean(activeOffer && !isBannerDismissed);
+  const bannerHeight = isBannerVisible ? 40 : 0;
+
   return (
     <div className="min-h-screen bg-[#0c1912] text-slate-300 font-sans selection:bg-gold selection:text-[#0c1912]">
+      {/* 0. DYNAMIC PROMOTIONAL BANNER (Fixed at very top, z-50, h-10) */}
+      {isBannerVisible && (
+        <OfferBanner 
+          offer={activeOffer} 
+          onOpenAppModal={handleOpenAppModal} 
+          onDismiss={() => setIsBannerDismissed(true)}
+        />
+      )}
       
-      {/* 1. STICKY BRAND HEADER & NAVIGATION */}
+      {/* 1. STICKY BRAND HEADER & NAVIGATION (Fixed directly below announcement bar, z-40) */}
       <Navbar 
         onOpenAppModal={handleOpenAppModal} 
         logoUrl={settings.logo_url}
         websiteName={settings.website_name}
+        topOffset={bannerHeight}
       />
 
       <main>
@@ -95,7 +165,7 @@ export default function KindleafOfficialWebsite() {
         <Philosophy />
 
         {/* 4. THE BLEND (4 Botanical Ingredients Showcase) */}
-        <IngredientsBlend />
+        <IngredientsBlend items={ingredients} />
 
         {/* 5. SLOW LIVING STORYTELLING */}
         <SlowLiving />
@@ -104,10 +174,10 @@ export default function KindleafOfficialWebsite() {
         <RitualPlanner onOpenAppModal={handleOpenAppModal} />
 
         {/* 7. BREWING GUIDE (Visual steps + interactive simulation) */}
-        <BrewingGuide />
+        <BrewingGuide config={brewingConfig} />
 
         {/* 8. OUR STORY (Soldier's home heritage + trust badges) */}
-        <OurStory />
+        <OurStory content={storyContent} />
 
         {/* 9. OUR BLENDS (Informational Product Library - No Cart, No Checkout) */}
         <OurBlends 
@@ -117,10 +187,10 @@ export default function KindleafOfficialWebsite() {
         />
 
         {/* 10. JOURNAL (Educational articles & storytelling) */}
-        <JournalSection />
+        <JournalSection articles={journalArticles} />
 
         {/* 11. FAQ ACCORDION */}
-        <FAQSection onOpenAppModal={handleOpenAppModal} />
+        <FAQSection faqs={faqs} onOpenAppModal={handleOpenAppModal} />
 
         {/* 12. CONTACT DESK */}
         <ContactSection settings={settings} />

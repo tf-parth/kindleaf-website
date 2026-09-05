@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -13,14 +13,27 @@ function LegalContent() {
   const initialTab: TabType = (tabParam && ['privacy', 'terms', 'shipping', 'refund', 'disclaimer'].includes(tabParam)) ? tabParam : 'privacy';
   const [selectedTab, setSelectedTab] = useState<TabType | null>(null);
   const activeTab = selectedTab || initialTab;
+  const [legalData, setLegalData] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('/api/legal')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Object.keys(data).length > 0) setLegalData(data);
+      })
+      .catch(() => {});
+  }, []);
 
   const tabs = [
-    { id: 'privacy', label: 'Privacy Policy' },
-    { id: 'terms', label: 'Terms & Conditions' },
-    { id: 'shipping', label: 'Shipping Policy' },
-    { id: 'refund', label: 'Refund Policy' },
-    { id: 'disclaimer', label: 'Medical Disclaimer' },
+    { id: 'privacy', label: 'Privacy Policy', key: 'privacy_policy' },
+    { id: 'terms', label: 'Terms & Conditions', key: 'terms_conditions' },
+    { id: 'shipping', label: 'Shipping Policy', key: 'shipping_policy' },
+    { id: 'refund', label: 'Refund Policy', key: 'refund_policy' },
+    { id: 'disclaimer', label: 'Medical Disclaimer', key: 'medical_disclaimer' },
   ];
+
+  const currentTabConfig = tabs.find(t => t.id === activeTab);
+  const dynamicDoc = legalData && currentTabConfig ? legalData[currentTabConfig.key] : null;
 
   return (
     <div className="max-w-4xl mx-auto relative z-10 space-y-10">
@@ -58,8 +71,31 @@ function LegalContent() {
 
       {/* Tab Content Display Area */}
       <div className="glass-panel border border-white/10 rounded-2xl p-8 lg:p-10 shadow-xl leading-relaxed text-sm">
-        {activeTab === 'privacy' && (
+        {dynamicDoc && dynamicDoc.sections && dynamicDoc.sections.length > 0 ? (
           <section className="space-y-6">
+            <h2 className="text-xl font-serif text-[#F8F6F2] font-bold border-b border-white/5 pb-2">
+              {currentTabConfig?.label}
+            </h2>
+            <p className="text-slate-400 text-xs">
+              Last updated: {dynamicDoc.last_updated || 'August 2026'}
+            </p>
+            {dynamicDoc.sections.map((sec: any, sIdx: number) => (
+              <div key={sIdx} className="space-y-2">
+                {sec.title && (
+                  <h3 className="text-base font-serif text-gold font-bold">
+                    {sec.title}
+                  </h3>
+                )}
+                <p className="text-slate-300 leading-relaxed">
+                  {sec.content}
+                </p>
+              </div>
+            ))}
+          </section>
+        ) : (
+          <>
+            {activeTab === 'privacy' && (
+              <section className="space-y-6">
             <h2 className="text-xl font-serif text-[#F8F6F2] font-bold border-b border-white/5 pb-2">Privacy Policy</h2>
             <p className="text-slate-400 text-xs">Last updated: August 2026</p>
             <p>
@@ -223,6 +259,8 @@ function LegalContent() {
               We do not claim that Kindleaf treats, cures, or prevents any disease or illness. Always consult a qualified healthcare provider if you have underlying medical conditions, are pregnant or nursing, or are taking prescription medications.
             </p>
           </section>
+        )}
+          </>
         )}
       </div>
     </div>

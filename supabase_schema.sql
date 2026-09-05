@@ -195,3 +195,123 @@ CREATE POLICY "Allow public read media" ON public.media FOR SELECT
 -- Admin write
 CREATE POLICY "Admins full access media" ON public.media FOR ALL 
     TO authenticated USING (true) WITH CHECK (true);
+
+---------------------------------------------------------
+-- 9. JOURNAL ARTICLES TABLE (BLOGS)
+---------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.journal_articles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    excerpt TEXT,
+    content JSONB DEFAULT '[]'::jsonb,
+    cover_image TEXT,
+    category TEXT NOT NULL DEFAULT 'Tea',
+    read_time TEXT DEFAULT '4 min read',
+    author TEXT DEFAULT 'Kindleaf Herbalist',
+    date TEXT DEFAULT 'August 2026',
+    status TEXT NOT NULL DEFAULT 'published', -- 'published', 'draft'
+    seo_title TEXT,
+    seo_description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.journal_articles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read published articles" ON public.journal_articles FOR SELECT 
+    USING (status = 'published');
+
+CREATE POLICY "Admins full access journal_articles" ON public.journal_articles FOR ALL 
+    TO authenticated USING (true) WITH CHECK (true);
+
+---------------------------------------------------------
+-- 10. INGREDIENTS TABLE
+---------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.ingredients (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    key TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    botanical TEXT NOT NULL,
+    role TEXT,
+    flavor_aroma TEXT,
+    details TEXT,
+    icon TEXT,
+    notes JSONB DEFAULT '[]'::jsonb,
+    image TEXT,
+    display_order INTEGER DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'published',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.ingredients ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read published ingredients" ON public.ingredients FOR SELECT 
+    USING (status = 'published');
+
+CREATE POLICY "Admins full access ingredients" ON public.ingredients FOR ALL 
+    TO authenticated USING (true) WITH CHECK (true);
+
+---------------------------------------------------------
+-- 11. FAQS TABLE
+---------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.faqs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    category TEXT DEFAULT 'General',
+    display_order INTEGER DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'published',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.faqs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read published faqs" ON public.faqs FOR SELECT 
+    USING (status = 'published');
+
+CREATE POLICY "Admins full access faqs" ON public.faqs FOR ALL 
+    TO authenticated USING (true) WITH CHECK (true);
+
+---------------------------------------------------------
+-- 12. OFFERS & PROMOTIONS TABLE
+---------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.offers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    description TEXT,
+    image TEXT,
+    cta_text TEXT DEFAULT 'GET THE KINDLEAF APP',
+    cta_link TEXT DEFAULT '#get-the-app',
+    start_date TEXT,
+    end_date TEXT,
+    active BOOLEAN DEFAULT true,
+    priority INTEGER DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'published',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.offers ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read active offers" ON public.offers FOR SELECT 
+    USING (active = true AND status = 'published');
+
+CREATE POLICY "Admins full access offers" ON public.offers FOR ALL 
+    TO authenticated USING (true) WITH CHECK (true);
+
+---------------------------------------------------------
+-- 13. SUPABASE STORAGE BUCKET CONFIGURATION (FOR MEDIA)
+---------------------------------------------------------
+-- Insert media storage bucket if missing
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('media', 'media', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Policy to allow public reads from media bucket
+CREATE POLICY "Public media access" ON storage.objects FOR SELECT 
+    USING (bucket_id = 'media');
+
+-- Policy to allow authenticated admin uploads to media bucket
+CREATE POLICY "Admin media upload" ON storage.objects FOR INSERT TO authenticated 
+    WITH CHECK (bucket_id = 'media');
+
