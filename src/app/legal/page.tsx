@@ -77,6 +77,72 @@ function LegalContent() {
             <p>
               Shipping and delivery details collected in the Kindleaf Mobile App are processed strictly for order fulfillment and courier tracking in India.
             </p>
+
+            <h3 className="text-base font-serif text-gold font-bold">4. Information We Collect</h3>
+            <p>
+              We may collect limited personal information that you voluntarily provide when interacting with Kindleaf. This may include your name, email address, phone number, shipping address, and any message or information you submit through our Contact Desk or other communication channels.
+            </p>
+            <p>
+              Information collected through the Kindleaf Mobile App may also be used to process orders, arrange delivery, provide order updates, and respond to customer support requests.
+            </p>
+            <p>
+              We collect only the information reasonably necessary to provide our products, services, and customer support.
+            </p>
+
+            <h3 className="text-base font-serif text-gold font-bold">5. Cookies &amp; Website Analytics</h3>
+            <p>
+              The Kindleaf website may use cookies or similar technologies to support website functionality, understand website usage, and improve the user experience.
+            </p>
+            <p>
+              Where analytics or third-party measurement services are used, these services may collect limited technical information such as device type, browser information, approximate location, pages visited, and general website interaction data.
+            </p>
+            <p>
+              You may manage or disable cookies through your browser settings. Please note that disabling certain cookies may affect some website functionality.
+            </p>
+            <p className="text-xs text-slate-400 italic">
+              Notice: Currently, this informational website does not deploy advertising tracking pixels (such as Meta Pixel) or third-party marketing trackers.
+            </p>
+
+            <h3 className="text-base font-serif text-gold font-bold">6. Third-Party Services</h3>
+            <p>
+              Kindleaf may use trusted third-party service providers to support certain business operations and services. Depending on the services used, these may include:
+            </p>
+            <ul className="list-disc pl-5 space-y-1 text-slate-300 text-xs sm:text-sm">
+              <li>Website hosting and infrastructure providers</li>
+              <li>Payment service providers</li>
+              <li>Courier and shipping partners</li>
+              <li>Order tracking services</li>
+              <li>Analytics or website measurement services</li>
+              <li>Communication and customer support services</li>
+            </ul>
+            <p>
+              These third-party providers may receive only the information reasonably necessary to perform their respective services.
+            </p>
+            <p className="font-semibold text-[#F8F6F2]">
+              Kindleaf does not sell or trade personal information to third-party marketing brokers.
+            </p>
+
+            <h3 className="text-base font-serif text-gold font-bold">7. Data Retention</h3>
+            <p>
+              We retain personal information only for as long as reasonably necessary to provide our services, fulfil customer orders, respond to enquiries, maintain business records, and meet applicable legal or regulatory requirements.
+            </p>
+            <p>
+              Contact information submitted through our Contact Desk may be retained for as long as necessary to respond to and manage the relevant enquiry.
+            </p>
+            <p>
+              When personal information is no longer required for these purposes, we may securely delete or anonymize it where appropriate.
+            </p>
+
+            <h3 className="text-base font-serif text-gold font-bold">8. Contact for Privacy Questions</h3>
+            <p>
+              If you have questions, concerns, or requests regarding this Privacy Policy or the way Kindleaf handles personal information, please contact us at:
+            </p>
+            <p className="font-medium text-[#F8F6F2]">
+              Email: <a href="mailto:support@kindleaf.in" className="text-gold hover:underline">support@kindleaf.in</a>
+            </p>
+            <p>
+              We will make reasonable efforts to review and respond to privacy-related enquiries.
+            </p>
           </section>
         )}
 
@@ -107,7 +173,7 @@ function LegalContent() {
             <h2 className="text-xl font-serif text-[#F8F6F2] font-bold border-b border-white/5 pb-2">Shipping &amp; Delivery Information</h2>
             <p className="text-slate-400 text-xs">Last updated: August 2026</p>
             <p>
-              All product shipments are initiated through orders confirmed inside the Kindleaf Mobile App.
+              All product shipments are initiated through orders confirmed inside the Kindleaf Mobile App. Kindleaf operates in accordance with applicable food safety and regulatory requirements. Our tea blends are handcrafted in Jasrana, Firozabad, Uttar Pradesh, India.
             </p>
             <h3 className="text-base font-serif text-gold font-bold">1. Small-Batch Fulfillment</h3>
             <p>
@@ -115,7 +181,7 @@ function LegalContent() {
             </p>
             <h3 className="text-base font-serif text-gold font-bold">2. Delivery Timeframes</h3>
             <p>
-              Standard courier delivery across India typically takes 3 to 7 business days depending on location. Tracking updates are sent directly to your phone via the Kindleaf App.
+              Standard courier delivery across India typically takes 3 to 7 business days depending on location. Tracking information, where available, can be accessed through the Kindleaf App.
             </p>
           </section>
         )}
@@ -145,7 +211,7 @@ function LegalContent() {
             <div className="bg-[#163322]/40 border border-gold/30 p-5 rounded-xl text-slate-200">
               <p className="font-semibold text-[#F8F6F2] mb-2">Important Health Notice:</p>
               <p className="text-xs sm:text-sm leading-relaxed">
-                Kindleaf Herbal Green Tea is a handcrafted natural beverage made with green tea, holy basil (Tulsi), lemongrass, and dry ginger. It is formulated as a refreshing dietary drink for daily mindfulness rituals.
+                Kindleaf Herbal Green Tea is a handcrafted natural beverage made with green tea, holy basil (Tulsi), lemongrass, and dry ginger. It is crafted as a refreshing herbal beverage for mindful daily rituals.
               </p>
             </div>
             <h3 className="text-base font-serif text-gold font-bold">1. Not Medical Advice</h3>

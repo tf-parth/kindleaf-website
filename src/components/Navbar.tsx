@@ -28,7 +28,6 @@ export default function Navbar({ onOpenAppModal, logoUrl = "/assets/logo.png", w
     { label: "The Blend", href: "/#blend" },
     { label: "Brewing Guide", href: "/#brewing" },
     { label: "Our Story", href: "/#story" },
-    { label: "Our Blends", href: "/#blends" },
     { label: "Journal", href: "/#journal" },
     { label: "FAQ", href: "/#faq" },
     { label: "Contact", href: "/#contact" },

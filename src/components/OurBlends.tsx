@@ -29,9 +29,9 @@ export default function OurBlends({ products, onSelectProduct, onOpenAppModal }:
       id: "mock-natural-100",
       title: "Handcrafted Herbal Green Tea | Standard Pack",
       slug: "herbal-green-tea-natural",
-      description: "Our standard 100g pouch. Contains premium green tea infused with whole holy basil (Tulsi) leaves, lemongrass, and dry ginger root.",
+      description: "Our standard 50g pouch. Contains premium green tea infused with whole holy basil (Tulsi) leaves, lemongrass, and dry ginger root.",
       short_description: "100% natural handcrafted herbal green tea infused with Tulsi, Lemongrass, and Ginger.",
-      weight: "100g Pouch",
+      weight: "50g Pouch",
       category: "Single Pack",
       taste_profile: "Crisp green tea with bright citrus lemongrass and a lingering ginger warmth.",
       img: "/assets/product_natural.png",
@@ -42,9 +42,9 @@ export default function OurBlends({ products, onSelectProduct, onOpenAppModal }:
       id: "mock-combo-200",
       title: "Handcrafted Herbal Green Tea | Double Ritual Combo",
       slug: "herbal-green-tea-combo",
-      description: "Our value duo pack (2 x 100g pouches). Handcrafted and sealed in small batches to preserve botanical freshness.",
-      short_description: "Two 100g pouches of our signature herbal green tea blend.",
-      weight: "200g (2x100g Pouches)",
+      description: "Our value duo pack (2 x 50g pouches). Handcrafted and sealed in small batches to preserve botanical freshness.",
+      short_description: "Two 50g pouches of our signature herbal green tea blend.",
+      weight: "100g (2x50g Pouches)",
       category: "Duo Pack",
       taste_profile: "Zesty, herbaceous, and warm. Designed for regular daily tea rituals.",
       img: "/assets/product_combo.png",
@@ -130,7 +130,7 @@ export default function OurBlends({ products, onSelectProduct, onOpenAppModal }:
                     <div className="flex items-start gap-2 text-slate-300">
                       <ShieldCheck size={14} className="text-gold mt-0.5 shrink-0" />
                       <span>
-                        <strong className="text-slate-200">Quality:</strong> FSSAI Licensed/Registered • Handcrafted in UP, India
+                        <strong className="text-slate-200">Quality:</strong> FSSAI Licensed Food Business • Handcrafted in UP, India
                       </span>
                     </div>
                   </div>

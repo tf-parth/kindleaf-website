@@ -4,13 +4,13 @@
       "id": "mock-natural-100",
       "title": "Handcrafted Herbal Green Tea | Natural",
       "slug": "herbal-green-tea-natural",
-      "description": "Our standard 100g package. Contains premium green tea infused with organic tulsi leaves, lemongrass, and dry ginger. Blended with care for a fresh, balanced flavor to complement your daily tea ritual.",
+      "description": "Our standard 50g package. Contains premium green tea infused with organic tulsi leaves, lemongrass, and dry ginger. Blended with care for a fresh, balanced flavor to complement your daily tea ritual.",
       "short_description": "100% natural handcrafted herbal green tea infused with Tulsi, Lemongrass, and Ginger.",
       "price": 249,
       "sale_price": null,
       "stock": 100,
-      "sku": "KL-HT-NAT-100",
-      "weight": "100g",
+      "sku": "KL-HT-NAT-50",
+      "weight": "50g",
       "category": "Herbal Green Tea",
       "benefits": [
         "🍃 100% Natural Base",
@@ -36,20 +36,20 @@
       ],
       "status": "published",
       "featured": true,
-      "seo_title": "Kindleaf Herbal Green Tea - 100g Pack",
-      "seo_description": "Buy Kindleaf Herbal Green Tea. Infused with tulsi, lemongrass, and ginger to boost immunity and support metabolism."
+      "seo_title": "Kindleaf Herbal Green Tea - 50g Pack",
+      "seo_description": "Kindleaf Herbal Green Tea 50g pack. Handcrafted blend of green tea, tulsi, lemongrass, and ginger for mindful daily rituals."
     },
     {
       "id": "mock-combo-200",
       "title": "Handcrafted Herbal Green Tea - Combo",
       "slug": "herbal-green-tea-combo",
-      "description": "Our premium combo pack (2 x 100g pouches). Sourced locally and handcrafted. Contains two pouches of our signature blend of green tea, tulsi, lemongrass, and ginger.",
-      "short_description": "Best value combo pack containing two 100g pouches of our immunity herbal green tea.",
+      "description": "Our value duo pack (2 x 50g pouches). Handcrafted in Jasrana and sealed in small batches to preserve botanical freshness. Contains two pouches of our signature blend of green tea, tulsi, lemongrass, and ginger.",
+      "short_description": "Best value combo pack containing two 50g pouches of our signature herbal green tea.",
       "price": 449,
       "sale_price": null,
       "stock": 85,
-      "sku": "KL-HT-COMBO-200",
-      "weight": "200g (2x100g)",
+      "sku": "KL-HT-COMBO-100",
+      "weight": "100g (2x50g)",
       "category": "Herbal Green Tea",
       "benefits": [
         "🍵 Double the Blend",
@@ -75,8 +75,8 @@
       ],
       "status": "published",
       "featured": true,
-      "seo_title": "Kindleaf Herbal Green Tea - 200g Combo Pack",
-      "seo_description": "Best value Combo pack. 2x100g packs of handcrafted herbal green tea with Ginger, Lemongrass, and Holy Basil."
+      "seo_title": "Kindleaf Herbal Green Tea - 100g Combo Pack (2x50g)",
+      "seo_description": "Best value combo pack. Two 50g packs of handcrafted herbal green tea with Ginger, Lemongrass, and Holy Basil."
     }
   ],
   "orders": [
@@ -214,7 +214,7 @@
     "contact_phone": "+91 6396461480",
     "address": "Vill. Katoora, post darapur milawali, jasrana firozabad 283136, Uttar Pradesh",
     "instagram_url": "https://instagram.com/kindleaf.wellness",
-    "facebook_url": "https://facebook.com",
+    "facebook_url": "https://www.facebook.com/share/1EELT4gBjW/",
     "whatsapp_phone": "916396461480",
     "amazon_store_url": "https://www.amazon.in/dp/B0GQCZM7YN",
     "seo_title": "Kindleaf | Handcrafted Herbal Green Tea",

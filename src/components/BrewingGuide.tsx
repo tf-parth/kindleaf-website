@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Play, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 
-const TARGET_VOLUME = 0.18; // 18% ambient volume (within 15–20%)
+const TARGET_VOLUME = 0.09; // 9% ambient volume (within 8–10%)
 
 export default function BrewingGuide() {
   // Brewing Simulator States
@@ -116,43 +116,50 @@ export default function BrewingGuide() {
     setIsBrewing(true);
     setIsSteaming(true);
 
-    // Start background music loop at 18% volume
+    // Start background music loop at 9% volume
     playAudio();
 
-    let totalSeconds = 180;
-    const animationSteps = 12;
-    let currentStep = 0;
+    const TOTAL_BREW_SECONDS = 180;
+    let remainingSeconds = TOTAL_BREW_SECONDS;
 
     setLiquidColor('#c5a880');
     setLiquidOpacity(0.2);
     setLiquidHeight('80');
     setActiveStep(1);
+    setTimerText('03:00');
+
+    if (brewIntervalRef.current) clearInterval(brewIntervalRef.current);
 
     brewIntervalRef.current = setInterval(() => {
-      currentStep++;
-      totalSeconds -= 180 / animationSteps;
+      remainingSeconds -= 1;
 
-      const min = Math.max(0, Math.floor(totalSeconds / 60));
-      const sec = Math.max(0, Math.floor(totalSeconds % 60));
-      setTimerText(`${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`);
-
-      const completionRatio = currentStep / animationSteps;
-      setLiquidOpacity(0.2 + 0.75 * completionRatio);
-
-      if (completionRatio >= 0.25 && completionRatio < 0.5) {
-        setActiveStep(2);
-      } else if (completionRatio >= 0.5 && completionRatio < 0.75) {
-        setActiveStep(3);
-      } else if (completionRatio >= 0.75) {
-        setActiveStep(4);
-      }
-
-      if (currentStep >= animationSteps) {
+      if (remainingSeconds <= 0) {
         if (brewIntervalRef.current) clearInterval(brewIntervalRef.current);
         setTimerText('00:00');
+        setLiquidOpacity(0.95);
+        setActiveStep(4);
         setIsSteaming(false);
         // Fade out ambient music as brewing experience concludes
         stopAudioWithFade();
+        return;
+      }
+
+      const min = Math.floor(remainingSeconds / 60);
+      const sec = remainingSeconds % 60;
+      setTimerText(`${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`);
+
+      const elapsed = TOTAL_BREW_SECONDS - remainingSeconds;
+      const completionRatio = elapsed / TOTAL_BREW_SECONDS;
+      setLiquidOpacity(0.2 + 0.75 * completionRatio);
+
+      if (completionRatio < 0.25) {
+        setActiveStep(1);
+      } else if (completionRatio < 0.5) {
+        setActiveStep(2);
+      } else if (completionRatio < 0.75) {
+        setActiveStep(3);
+      } else {
+        setActiveStep(4);
       }
     }, 1000);
   };
@@ -278,7 +285,11 @@ export default function BrewingGuide() {
                 {timerText}
               </div>
               <p className="text-slate-400 text-xs">
-                {isBrewing ? 'Steeping in progress: inhale the gentle herbal aroma...' : 'Tap below to begin a mindful 3-minute steep.'}
+                {isBrewing 
+                  ? (timerText === '00:00' 
+                      ? 'Brewing complete! Your mindful cup is ready to sip.' 
+                      : 'Steeping in progress: inhale the gentle herbal aroma...') 
+                  : 'Tap below to begin a mindful 3-minute steep.'}
               </p>
 
               {/* Main Action Button */}
@@ -292,7 +303,7 @@ export default function BrewingGuide() {
                   }`}
                 >
                   {isBrewing ? <RotateCcw size={14} /> : <Play size={14} />}
-                  <span>{isBrewing ? 'Reset Brewing' : 'Begin Brewing'}</span>
+                  <span>{isBrewing ? (timerText === '00:00' ? 'Brew Another Cup' : 'Reset Brewing') : 'Begin Brewing'}</span>
                 </button>
 
                 {/* Subtle Ambient Sound & Mute Toggle */}
@@ -304,7 +315,7 @@ export default function BrewingGuide() {
                     title={isMuted ? "Unmute background ambient music" : "Mute background ambient music"}
                   >
                     {isMuted ? <VolumeX size={13} /> : <Volume2 size={13} />}
-                    <span>{isMuted ? "Sound Muted" : "Ambient Ritual Sound (18%)"}</span>
+                    <span>{isMuted ? "Sound Muted" : "Ambient Ritual Sound (9%)"}</span>
                   </button>
                 )}
               </div>

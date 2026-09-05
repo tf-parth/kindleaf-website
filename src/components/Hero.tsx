@@ -101,7 +101,7 @@ export default function Hero({ onOpenAppModal }: HeroProps) {
           transition={{ duration: 0.7, delay: 0.2 }}
           className="text-base sm:text-lg md:text-xl text-slate-300 max-w-2xl mb-12 leading-relaxed font-normal"
         >
-          A handcrafted herbal green tea made with green tea, tulsi, lemongrass and ginger — blended for a simple, mindful tea ritual.
+          Kindleaf crafts artisanal Indian herbal green tea infused with whole holy basil, lemongrass, and ginger. Pure botanicals, mindful daily rituals, and honest Indian craftsmanship.
         </motion.p>
 
         {/* Action CTAs */}

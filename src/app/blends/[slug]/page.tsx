@@ -40,7 +40,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   // Fallback match by partial slug if needed
   if (!product) {
     if (slug.includes('combo')) {
-      product = products.find((p: any) => p.weight?.includes('200') || p.title?.includes('Combo'));
+      product = products.find((p: any) => p.slug?.includes('combo') || p.weight?.includes('2x') || p.title?.includes('Combo'));
     } else {
       product = products.find((p: any) => !p.title?.includes('Combo'));
     }
@@ -198,7 +198,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <p className="text-xs text-slate-300 leading-relaxed">
               • Shelf Life: 12 months from packing<br />
               • Storage: Cool, dry, dark pantry<br />
-              • Packaging: Sealed pouch to lock in volatile essential oils<br />
+              • Packaging: Sealed pouch designed to help preserve aroma and naturally occurring volatile compounds.<br />
               • Additives: 0% synthetic flavourings
             </p>
           </div>
@@ -210,7 +210,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </h3>
             <p className="text-xs text-slate-300 leading-relaxed">
               • Origin: Jasrana, Firozabad, UP, India<br />
-              • Regulatory: FSSAI Licensed / Registered<br />
+              • Regulatory: FSSAI Licensed Food Business<br />
               • Direct Inquiries: support@kindleaf.in<br />
               • Helpline: +91 6396461480
             </p>

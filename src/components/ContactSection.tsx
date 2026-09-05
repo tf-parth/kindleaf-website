@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send, CheckCircle2 } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle2, Facebook } from 'lucide-react';
 
 interface ContactSectionProps {
   settings?: {
@@ -9,6 +9,7 @@ interface ContactSectionProps {
     contact_phone?: string;
     address?: string;
     whatsapp_phone?: string;
+    facebook_url?: string;
   };
 }
 
@@ -17,6 +18,9 @@ export default function ContactSection({ settings }: ContactSectionProps) {
   const phone = settings?.contact_phone || "+91 6396461480";
   const address = settings?.address || "Vill. Katoora, post darapur milawali, jasrana firozabad 283136, Uttar Pradesh";
   const whatsapp = settings?.whatsapp_phone || "916396461480";
+  const facebook = (settings?.facebook_url && settings.facebook_url !== "https://facebook.com")
+    ? settings.facebook_url
+    : "https://www.facebook.com/share/1EELT4gBjW/";
 
   const [submitted, setSubmitted] = useState(false);
   const [name, setName] = useState('');
@@ -84,6 +88,19 @@ export default function ContactSection({ settings }: ContactSectionProps) {
                   <p className="text-slate-300 text-xs leading-relaxed">
                     {address}
                   </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4 p-4 rounded-2xl bg-[#163322]/25 border border-white/10 hover:border-gold/30 transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                  <Facebook size={18} />
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-0.5">Facebook Page</span>
+                  <a href={facebook} target="_blank" rel="noopener noreferrer" className="text-[#F8F6F2] hover:text-gold transition-colors font-medium inline-flex items-center gap-1.5">
+                    <span>Kindleaf on Facebook</span>
+                    <span className="text-xs text-gold">↗</span>
+                  </a>
                 </div>
               </div>
             </div>

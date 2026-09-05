@@ -22,7 +22,9 @@ export default function Footer({ onOpenAppModal, settings }: FooterProps) {
   const logoUrl = settings?.logo_url || "/assets/logo.png";
   const websiteName = settings?.website_name || "Kindleaf";
   const instagram = settings?.instagram_url || "https://instagram.com/kindleaf.wellness";
-  const facebook = settings?.facebook_url || "https://facebook.com";
+  const facebook = (settings?.facebook_url && settings.facebook_url !== "https://facebook.com")
+    ? settings.facebook_url
+    : "https://www.facebook.com/share/1EELT4gBjW/";
   const whatsapp = settings?.whatsapp_phone || "916396461480";
 
   return (
@@ -45,7 +47,7 @@ export default function Footer({ onOpenAppModal, settings }: FooterProps) {
               />
             </Link>
             <p className="text-xs leading-relaxed text-slate-400 max-w-sm">
-              Nourishing body and mind, one quiet cup at a time. Handcrafted Indian herbal green tea infused with whole holy basil (Tulsi), lemongrass, and dry ginger root.
+              One quiet cup, one mindful moment at a time. Handcrafted Indian herbal green tea infused with whole holy basil (Tulsi), lemongrass, and dry ginger root.
             </p>
             
             {/* Social links */}

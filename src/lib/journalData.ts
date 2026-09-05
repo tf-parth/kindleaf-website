@@ -23,7 +23,7 @@ export const JOURNAL_ARTICLES: JournalArticle[] = [
     content: [
       "When hot water meets delicate whole-leaf green tea and botanicals, extraction begins within seconds. Standard commercial habits encourage pouring rolling boiling water (100°C) straight into a mug. However, at boiling point, bitter catechins and tannins rush out before sweet, delicate amino acids like L-theanine can balance the cup.",
       "By keeping water temperature around 85°C—marked visually by small, energetic bubbles gathering at the bottom of the kettle—the green tea leaves unfurl gracefully without scorching.",
-      "Equally essential is steeping time. Allowing 3 to 5 minutes covered traps the volatile essential oils from lemongrass and holy basil that would otherwise evaporate into thin air.",
+      "Equally essential is steeping time. Allowing 3 to 5 minutes covered traps the natural aroma and volatile compounds from lemongrass and holy basil that would otherwise evaporate into thin air.",
       "The result is a translucent amber-green infusion that carries bright citrus notes upfront, followed by an aromatic herbal middle and a comforting ginger warmth."
     ]
   },

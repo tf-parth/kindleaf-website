@@ -129,7 +129,7 @@ export default function ProductModal({ product, isOpen, onClose, onOpenAppModal 
                   <span>Product &amp; Compliance Details</span>
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Manufactured in Jasrana, Firozabad, UP. FSSAI Licensed/Registered. Store in a cool, dry place away from direct sunlight.
+                  Manufactured in Jasrana, Firozabad, UP. FSSAI Licensed Food Business. Store in a cool, dry place away from direct sunlight.
                 </p>
               </div>
             </div>

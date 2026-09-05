@@ -12,7 +12,7 @@ export default function OurStory() {
     },
     {
       top: "FSSAI",
-      label: "Licensed / Registered",
+      label: "Licensed Food Business",
       sub: "Food safety standards compliant"
     },
     {

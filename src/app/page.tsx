@@ -28,7 +28,7 @@ export default function KindleafOfficialWebsite() {
     contact_phone: "+91 6396461480",
     address: "Vill. Katoora, post darapur milawali, jasrana firozabad 283136, Uttar Pradesh",
     instagram_url: "https://instagram.com/kindleaf.wellness",
-    facebook_url: "https://facebook.com",
+    facebook_url: "https://www.facebook.com/share/1EELT4gBjW/",
     whatsapp_phone: "916396461480"
   });
 
