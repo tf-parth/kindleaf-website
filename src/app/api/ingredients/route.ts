@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getIngredients, saveIngredient, deleteIngredient } from '@/lib/db';
 
 export async function GET(request: Request) {
@@ -19,6 +20,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Name and botanical name are required' }, { status: 400 });
     }
     const saved = await saveIngredient(body);
+    try {
+      revalidatePath('/', 'page');
+    } catch (e) {}
     return NextResponse.json(saved);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -33,8 +37,12 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Ingredient ID is required' }, { status: 400 });
     }
     await deleteIngredient(id);
+    try {
+      revalidatePath('/', 'page');
+    } catch (e) {}
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+

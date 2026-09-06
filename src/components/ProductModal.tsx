@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Smartphone, ShieldCheck, Clock } from 'lucide-react';
+import { X, Smartphone, ShieldCheck, Clock, ShoppingBag, ExternalLink } from 'lucide-react';
 import { ProductItem } from './OurBlends';
 
 interface ProductModalProps {
@@ -12,6 +12,20 @@ interface ProductModalProps {
 
 export default function ProductModal({ product, isOpen, onClose, onOpenAppModal }: ProductModalProps) {
   if (!isOpen || !product) return null;
+
+  const hasAmazon = Boolean(product.amazon_url && product.amazon_button_enabled !== false);
+  
+  // Format ingredients list
+  const ingredientsList: string[] = Array.isArray(product.ingredients)
+    ? product.ingredients
+    : (typeof product.ingredients === 'string' && product.ingredients.trim().length > 0)
+      ? product.ingredients.split(',').map(s => s.trim()).filter(Boolean)
+      : [
+          "Premium Green Tea Base (Camellia sinensis)",
+          "Holy Basil / Tulsi (Ocimum tenuiflorum)",
+          "Fresh Cut Lemongrass (Cymbopogon citratus)",
+          "Dry Ginger Root (Zingiber officinale)"
+        ];
 
   return (
     <AnimatePresence>
@@ -69,7 +83,7 @@ export default function ProductModal({ product, isOpen, onClose, onOpenAppModal 
                   <span>100% Whole Cut Botanicals</span>
                 </div>
                 <p className="text-slate-300 text-xs sm:text-sm leading-relaxed pt-1">
-                  {product.description}
+                  {product.description || product.short_description}
                 </p>
               </div>
             </div>
@@ -78,21 +92,14 @@ export default function ProductModal({ product, isOpen, onClose, onOpenAppModal 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="p-5 rounded-2xl bg-[#0a150f] border border-white/10 space-y-3">
                 <h3 className="text-xs uppercase font-bold tracking-wider text-gold flex items-center gap-2">
-                  <span>🍃 Four Natural Ingredients</span>
+                  <span>🍃 Botanical Ingredients</span>
                 </h3>
                 <ul className="space-y-1.5 text-xs text-slate-300">
-                  <li className="flex items-center gap-2">
-                    <span className="text-gold">•</span> Premium Green Tea Base (Camellia sinensis)
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-gold">•</span> Holy Basil / Tulsi (Ocimum tenuiflorum)
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-gold">•</span> Fresh Cut Lemongrass (Cymbopogon citratus)
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-gold">•</span> Dry Ginger Root (Zingiber officinale)
-                  </li>
+                  {ingredientsList.map((ing, idx) => (
+                    <li key={idx} className="flex items-center gap-2">
+                      <span className="text-gold">•</span> {ing}
+                    </li>
+                  ))}
                 </ul>
               </div>
 
@@ -101,12 +108,16 @@ export default function ProductModal({ product, isOpen, onClose, onOpenAppModal 
                   <span>✨ Taste &amp; Aroma Notes</span>
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Clean, slightly brisk green tea base with bright citrus lemongrass upfront, a fragrant herbal middle from Tulsi, and a comforting warm ginger finish.
+                  {product.taste_profile || "Clean, slightly brisk green tea base with bright citrus lemongrass upfront, a fragrant herbal middle from Tulsi, and a comforting warm ginger finish."}
                 </p>
+                {product.aroma && (
+                  <p className="text-xs text-slate-400 leading-relaxed italic">
+                    <strong className="text-slate-300 not-italic">Aroma: </strong>{product.aroma}
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-1.5 pt-1">
-                  <span className="text-[11px] bg-[#163322] text-gold px-2.5 py-1 rounded-full border border-gold/20">Crisp Citrus</span>
-                  <span className="text-[11px] bg-[#163322] text-gold px-2.5 py-1 rounded-full border border-gold/20">Herbal Aroma</span>
-                  <span className="text-[11px] bg-[#163322] text-gold px-2.5 py-1 rounded-full border border-gold/20">Warm Finish</span>
+                  <span className="text-[11px] bg-[#163322] text-gold px-2.5 py-1 rounded-full border border-gold/20">Whole Botanicals</span>
+                  <span className="text-[11px] bg-[#163322] text-gold px-2.5 py-1 rounded-full border border-gold/20">Zero Artificial Flavours</span>
                 </div>
               </div>
             </div>
@@ -119,7 +130,7 @@ export default function ProductModal({ product, isOpen, onClose, onOpenAppModal 
                   <span>Brewing Direction</span>
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Heat fresh water to approx. 85°C. Measure 1 teaspoon (~2g). Steep covered for 3 to 5 minutes. Strain and sip mindfully.
+                  {product.brewing_summary || "Heat fresh water to approx. 85°C. Measure 1 teaspoon (~2g). Steep covered for 3 to 5 minutes. Strain and sip mindfully."}
                 </p>
               </div>
 
@@ -129,32 +140,47 @@ export default function ProductModal({ product, isOpen, onClose, onOpenAppModal 
                   <span>Product &amp; Compliance Details</span>
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Manufactured in Jasrana, Firozabad, UP. FSSAI Licensed Food Business. Store in a cool, dry place away from direct sunlight.
+                  {product.fssai_info || "Manufactured in Jasrana, Firozabad, UP. FSSAI Licensed Food Business. Store in a cool, dry place away from direct sunlight."}
                 </p>
               </div>
             </div>
 
-            {/* Bottom Callout & App Discovery */}
+            {/* Bottom Callout & Purchase Options */}
             <div className="p-6 rounded-2xl bg-gradient-to-r from-[#163322] to-[#0e2417] border border-gold/30 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
                 <h4 className="font-serif font-bold text-base text-[#F8F6F2]">
-                  Order via the Kindleaf App
+                  {hasAmazon ? "Order via Amazon or Kindleaf App" : "Order via the Kindleaf App"}
                 </h4>
                 <p className="text-xs text-slate-300 mt-0.5">
-                  Fresh batch ordering, real-time delivery tracking, and mindfulness guides are inside the app.
+                  {hasAmazon 
+                    ? "Direct official Amazon fulfillment or order directly inside the Kindleaf App." 
+                    : "Fresh batch ordering, real-time delivery tracking, and mindfulness guides are inside the app."}
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full sm:w-auto">
+                {hasAmazon && (
+                  <a
+                    href={product.amazon_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-[#0c1912] font-bold px-6 py-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg tracking-wider"
+                  >
+                    <ShoppingBag size={15} />
+                    <span>BUY ON AMAZON</span>
+                    <ExternalLink size={13} />
+                  </a>
+                )}
+
                 <button
                   onClick={() => {
                     onClose();
                     onOpenAppModal();
                   }}
-                  className="w-full sm:w-auto bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-6 py-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+                  className="w-full sm:w-auto bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-6 py-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md whitespace-nowrap"
                 >
                   <Smartphone size={15} />
-                  <span>Get the App to Order</span>
+                  <span>Get the App</span>
                 </button>
               </div>
             </div>

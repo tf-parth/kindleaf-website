@@ -2,8 +2,11 @@ import React from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Leaf, Clock, ShieldCheck, Sparkles, Smartphone, ArrowLeft, CheckCircle2 } from 'lucide-react';
-import { getProducts } from '@/lib/db';
+import { Leaf, Clock, ShieldCheck, Sparkles, Smartphone, ArrowLeft, CheckCircle2, ShoppingBag, ExternalLink } from 'lucide-react';
+import { getProductBySlug } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -11,8 +14,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const products = await getProducts();
-  const product = products.find((p: any) => p.slug === slug);
+  const product = await getProductBySlug(slug, false);
 
   if (!product) {
     return {
@@ -22,8 +24,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${product.title} | Kindleaf Official Product Facts`,
-    description: product.description || product.short_description,
+    title: `${product.seo_title || product.title} | Kindleaf Official Product Facts`,
+    description: product.seo_description || product.description || product.short_description,
     openGraph: {
       title: `${product.title} | Kindleaf Herbal Green Tea`,
       description: product.description || product.short_description,
@@ -34,21 +36,25 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const products = await getProducts();
-  let product = products.find((p: any) => p.slug === slug);
+  const product = await getProductBySlug(slug, false);
 
-  // Fallback match by partial slug if needed
-  if (!product) {
-    if (slug.includes('combo')) {
-      product = products.find((p: any) => p.slug?.includes('combo') || p.weight?.includes('2x') || p.title?.includes('Combo'));
-    } else {
-      product = products.find((p: any) => !p.title?.includes('Combo'));
-    }
-  }
-
-  if (!product) {
+  if (!product || product.status !== 'published') {
     notFound();
   }
+
+  const hasAmazon = Boolean(product.amazon_url && product.amazon_button_enabled !== false);
+
+  // Format ingredients list
+  const ingredientsList: string[] = Array.isArray(product.ingredients)
+    ? product.ingredients
+    : (typeof product.ingredients === 'string' && product.ingredients.trim().length > 0)
+      ? product.ingredients.split(',').map((s: string) => s.trim()).filter(Boolean)
+      : [
+          "Premium Green Tea Base (Camellia sinensis)",
+          "Holy Basil / Tulsi (Ocimum tenuiflorum)",
+          "Fresh Dried Lemongrass (Cymbopogon citratus)",
+          "Dried Ginger Root (Zingiber officinale)"
+        ];
 
   return (
     <main className="min-h-screen bg-[#0c1912] text-slate-300 font-sans relative overflow-hidden">
@@ -73,19 +79,24 @@ export default async function ProductDetailPage({ params }: PageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
           
           {/* Visual Showcase */}
-          <div className="lg:col-span-6 glass-panel rounded-3xl p-8 border border-white/10 flex items-center justify-center aspect-square bg-[#0a150f]/80 shadow-2xl">
+          <div className="lg:col-span-6 glass-panel rounded-3xl p-8 border border-white/10 flex flex-col items-center justify-center aspect-square bg-[#0a150f]/80 shadow-2xl relative">
             <img 
               src={product.img || "/assets/product_natural.png"} 
               alt={product.title} 
-              className="max-h-full max-w-full object-contain"
+              className="max-h-[85%] max-w-[85%] object-contain"
             />
+            {product.category && (
+              <span className="absolute top-6 left-6 bg-[#0c1912]/90 border border-white/10 text-gold text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                {product.category}
+              </span>
+            )}
           </div>
 
           {/* Product Fact Sheet */}
           <div className="lg:col-span-6 space-y-6">
             <div>
               <span className="text-gold text-xs font-semibold uppercase tracking-widest block mb-2">
-                Official Product Information • No Direct Website Sales
+                Official Product Information • Direct From Maker
               </span>
               <h1 className="text-3xl sm:text-4xl font-serif text-[#F8F6F2] font-bold leading-tight">
                 {product.title}
@@ -102,7 +113,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
 
             <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-              {product.description}
+              {product.description || product.short_description}
             </p>
 
             {/* Botanical Composition */}
@@ -112,22 +123,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 <span>Verified Ingredients (Whole Cut)</span>
               </h2>
               <ul className="space-y-2 text-xs sm:text-sm text-slate-300">
-                <li className="flex items-center justify-between border-b border-white/5 pb-1.5">
-                  <span>Premium Green Tea Leaves</span>
-                  <span className="text-slate-400 italic text-xs">Camellia sinensis</span>
-                </li>
-                <li className="flex items-center justify-between border-b border-white/5 pb-1.5">
-                  <span>Holy Basil / Tulsi</span>
-                  <span className="text-slate-400 italic text-xs">Ocimum tenuiflorum</span>
-                </li>
-                <li className="flex items-center justify-between border-b border-white/5 pb-1.5">
-                  <span>Fresh Dried Lemongrass</span>
-                  <span className="text-slate-400 italic text-xs">Cymbopogon citratus</span>
-                </li>
-                <li className="flex items-center justify-between">
-                  <span>Dried Ginger Root</span>
-                  <span className="text-slate-400 italic text-xs">Zingiber officinale</span>
-                </li>
+                {ingredientsList.map((ing, i) => (
+                  <li key={i} className="flex items-center justify-between border-b border-white/5 pb-1.5 last:border-none last:pb-0">
+                    <span>{ing}</span>
+                    <span className="text-emerald-400 text-xs">✓ Verified Natural</span>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -138,22 +139,42 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 <span>Taste Profile &amp; Aroma</span>
               </h2>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Light vegetal sweetness with bright citrus notes from lemongrass, balanced by the aromatic peppery aroma of holy basil, finishing with a lingering, gentle ginger warmth.
+                {product.taste_profile || "Light vegetal sweetness with bright citrus notes from lemongrass, balanced by the aromatic peppery aroma of holy basil, finishing with a lingering, gentle ginger warmth."}
               </p>
+              {product.aroma && (
+                <p className="text-xs text-slate-400 leading-relaxed italic pt-1">
+                  <strong className="text-slate-300 not-italic">Aroma Bouquet: </strong>{product.aroma}
+                </p>
+              )}
             </div>
 
-            {/* How to Order Banner */}
-            <div className="p-6 rounded-2xl bg-gradient-to-r from-[#163322] to-[#0e2417] border border-gold/40 space-y-4">
+            {/* How to Order / Amazon Purchase Box */}
+            <div className="p-6 rounded-2xl bg-gradient-to-r from-[#163322] to-[#0e2417] border border-gold/40 space-y-4 shadow-xl">
               <div>
                 <h3 className="font-serif font-bold text-base sm:text-lg text-[#F8F6F2]">
-                  Order via the Kindleaf App
+                  {hasAmazon ? "Purchase on Amazon or Order via App" : "Order via the Kindleaf App"}
                 </h3>
                 <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                  Kindleaf teas are packaged in small batches and sold directly to customers through the Kindleaf Mobile App to guarantee maximum leaf freshness.
+                  {hasAmazon 
+                    ? "Order directly on Amazon India with fast Prime delivery, or through the Kindleaf Mobile App for subscription rituals."
+                    : "Kindleaf teas are packaged in small batches and sold directly to customers through the Kindleaf Mobile App to guarantee maximum leaf freshness."}
                 </p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
+                {hasAmazon && (
+                  <a
+                    href={product.amazon_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-[#0c1912] font-bold px-7 py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-lg tracking-wider"
+                  >
+                    <ShoppingBag size={16} />
+                    <span>BUY ON AMAZON</span>
+                    <ExternalLink size={14} />
+                  </a>
+                )}
+
                 <Link
                   href="/#get-the-app"
                   className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-6 py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md"
@@ -161,9 +182,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   <Smartphone size={16} />
                   <span>GET THE KINDLEAF APP</span>
                 </Link>
+
                 <Link
                   href="/#brewing"
-                  className="glass-panel text-slate-300 hover:text-white font-semibold px-6 py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 border border-white/15 transition-colors"
+                  className="glass-panel text-slate-300 hover:text-white font-semibold px-5 py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 border border-white/15 transition-colors"
                 >
                   <Clock size={16} />
                   <span>Brewing Guide</span>
@@ -183,10 +205,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
               <span>Brewing Parameters</span>
             </h3>
             <p className="text-xs text-slate-300 leading-relaxed">
-              • Water Temperature: 85°C (bubbles forming)<br />
-              • Serving Size: 1 tsp (~2 grams)<br />
-              • Steeping Duration: 3–5 minutes covered<br />
-              • Repeat Infusions: 1–2 times
+              {product.brewing_summary || (
+                <>
+                  • Water Temperature: 85°C (bubbles forming)<br />
+                  • Serving Size: 1 tsp (~2 grams)<br />
+                  • Steeping Duration: 3–5 minutes covered<br />
+                  • Repeat Infusions: 1–2 times
+                </>
+              )}
             </p>
           </div>
 
@@ -206,11 +232,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
           <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-2">
             <h3 className="font-serif font-bold text-sm text-[#F8F6F2] flex items-center gap-2">
               <CheckCircle2 size={16} className="text-gold" />
-              <span>Manufacturer Details</span>
+              <span>Manufacturer &amp; Regulatory</span>
             </h3>
             <p className="text-xs text-slate-300 leading-relaxed">
+              • Quality: {product.fssai_info || "FSSAI Licensed Food Business"}<br />
               • Origin: Jasrana, Firozabad, UP, India<br />
-              • Regulatory: FSSAI Licensed Food Business<br />
               • Direct Inquiries: support@kindleaf.in<br />
               • Helpline: +91 6396461480
             </p>

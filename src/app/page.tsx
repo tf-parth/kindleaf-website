@@ -28,6 +28,7 @@ export default function KindleafOfficialWebsite() {
   const [journalArticles, setJournalArticles] = useState<any[]>([]);
   const [brewingConfig, setBrewingConfig] = useState<any>(null);
   const [storyContent, setStoryContent] = useState<any>(null);
+  const [homepageContent, setHomepageContent] = useState<any>(null);
 
   const [settings, setSettings] = useState<any>({
     website_name: "Kindleaf",
@@ -113,6 +114,14 @@ export default function KindleafOfficialWebsite() {
         if (data && Object.keys(data).length > 0) setStoryContent(data);
       })
       .catch(() => {});
+
+    // Fetch Homepage content
+    fetch('/api/homepage')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Object.keys(data).length > 0) setHomepageContent(data);
+      })
+      .catch(() => {});
   }, []);
 
   const handleOpenProduct = (product: any) => {
@@ -159,7 +168,7 @@ export default function KindleafOfficialWebsite() {
 
       <main>
         {/* 2. HERO SECTION */}
-        <Hero onOpenAppModal={handleOpenAppModal} />
+        <Hero content={homepageContent?.hero} onOpenAppModal={handleOpenAppModal} />
 
         {/* 3. OUR PHILOSOPHY */}
         <Philosophy />
@@ -168,7 +177,7 @@ export default function KindleafOfficialWebsite() {
         <IngredientsBlend items={ingredients} />
 
         {/* 5. SLOW LIVING STORYTELLING */}
-        <SlowLiving />
+        <SlowLiving content={homepageContent?.slow_living} />
 
         {/* 6. PERSONALIZED DAILY TEA ROUTINE (LIFESTYLE PLANNER) */}
         <RitualPlanner onOpenAppModal={handleOpenAppModal} />

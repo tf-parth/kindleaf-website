@@ -30,28 +30,52 @@ CREATE TABLE IF NOT EXISTS public.products (
     slug TEXT UNIQUE NOT NULL,
     description TEXT,
     short_description TEXT,
-    price NUMERIC NOT NULL,
+    price NUMERIC NOT NULL DEFAULT 249,
     sale_price NUMERIC,
     stock INTEGER DEFAULT 100 NOT NULL,
     sku TEXT UNIQUE,
-    weight TEXT NOT NULL DEFAULT '100g',
-    category TEXT NOT NULL DEFAULT 'Herbal Green Tea',
+    weight TEXT NOT NULL DEFAULT '50g',
+    category TEXT NOT NULL DEFAULT 'Single Pack',
+    variant TEXT DEFAULT 'Single Pack',
     benefits JSONB DEFAULT '[]'::jsonb,
     ingredients JSONB DEFAULT '[]'::jsonb,
+    taste_profile TEXT,
+    aroma TEXT,
+    brewing_summary TEXT,
     brewing_instructions JSONB DEFAULT '[]'::jsonb,
+    fssai_info TEXT DEFAULT 'FSSAI Licensed Food Business',
     amazon_url TEXT,
-    img TEXT NOT NULL,
+    amazon_button_enabled BOOLEAN DEFAULT false NOT NULL,
+    img TEXT NOT NULL DEFAULT '/assets/product_natural.png',
     images TEXT[] DEFAULT '{}'::text[],
-    status TEXT NOT NULL DEFAULT 'published', -- 'published', 'draft', 'hidden'
+    status TEXT NOT NULL DEFAULT 'published', -- 'published', 'draft', 'archived'
     featured BOOLEAN DEFAULT false NOT NULL,
+    display_order INTEGER DEFAULT 0 NOT NULL,
     seo_title TEXT,
     seo_description TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Incremental column migrations if table already exists in Supabase
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS taste_profile TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS aroma TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS brewing_summary TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS fssai_info TEXT DEFAULT 'FSSAI Licensed Food Business';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS amazon_url TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS amazon_button_enabled BOOLEAN DEFAULT false NOT NULL;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS variant TEXT DEFAULT 'Single Pack';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT 0 NOT NULL;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL;
+
+-- Indexes for high performance queries
+CREATE INDEX IF NOT EXISTS idx_products_slug ON public.products(slug);
+CREATE INDEX IF NOT EXISTS idx_products_status ON public.products(status);
+CREATE INDEX IF NOT EXISTS idx_products_display_order ON public.products(display_order);
 
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 
--- Public can view active products
+-- Public can view active published products
 CREATE POLICY "Allow public read active products" ON public.products FOR SELECT 
     USING (status = 'published');
 

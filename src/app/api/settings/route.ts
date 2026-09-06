@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getSettings, saveSettings } from '@/lib/db';
 
 export async function GET() {
@@ -17,8 +18,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing setting key or value' }, { status: 400 });
     }
     const saved = await saveSettings(key, value);
+    try {
+      revalidatePath('/', 'page');
+    } catch (e) {}
     return NextResponse.json(saved);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+

@@ -3,7 +3,20 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export default function SlowLiving() {
+interface SlowLivingProps {
+  content?: {
+    tag?: string;
+    headline?: string;
+    highlight?: string;
+    body?: string;
+    quote?: string;
+    ingredients_title?: string;
+    ingredients_body?: string;
+    closing_note?: string;
+  } | null;
+}
+
+export default function SlowLiving({ content }: SlowLivingProps) {
   return (
     <section className="py-24 relative overflow-hidden bg-[#0a150f] border-t border-white/5">
       <div className="max-w-6xl mx-auto px-6 relative z-10">
@@ -28,7 +41,7 @@ export default function SlowLiving() {
                   Daily Mindful Sip
                 </span>
                 <p className="text-xs sm:text-sm text-slate-200">
-                  &ldquo;Take three deep breaths before your first sip. Feel the warmth of the ceramic cup.&rdquo;
+                  {content?.quote ? `“${content.quote}”` : "“Take three deep breaths before your first sip. Feel the warmth of the ceramic cup.”"}
                 </p>
               </div>
             </div>
@@ -37,28 +50,28 @@ export default function SlowLiving() {
           {/* Narrative Content */}
           <div className="lg:col-span-6 space-y-6 order-1 lg:order-2">
             <span className="text-gold text-xs font-semibold uppercase tracking-widest block">
-              Slow Living
+              {content?.tag || "Slow Living"}
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#F8F6F2] leading-tight">
-              Not another notification.<br />
-              <span className="text-gold italic font-normal">Not another deadline.</span>
+              {content?.headline || "Not another notification."}<br />
+              <span className="text-gold italic font-normal">{content?.highlight || "Not another deadline."}</span>
             </h2>
             <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-              We spend so much time taking care of everything around us that we often forget to recharge ourselves. Kindleaf is more than just green tea. It’s a mindful ritual, a warm cup in your hands, and a small pause that makes a big difference.
+              {content?.body || "We spend so much time taking care of everything around us that we often forget to recharge ourselves. Kindleaf is more than just green tea. It’s a mindful ritual, a warm cup in your hands, and a small pause that makes a big difference."}
             </p>
 
             {/* Simple Ingredients callout */}
             <div className="p-6 rounded-2xl bg-[#163322]/30 border border-gold/20 space-y-2">
               <h3 className="text-base font-serif font-bold text-gold">
-                Simple Ingredients
+                {content?.ingredients_title || "Simple Ingredients"}
               </h3>
               <p className="text-slate-300 text-sm leading-relaxed">
-                Our blend is made from green tea, tulsi, lemongrass and ginger, selected and blended with care.
+                {content?.ingredients_body || "Our blend is made from green tea, tulsi, lemongrass and ginger, selected and blended with care."}
               </p>
             </div>
 
             <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-              No hurried preparation, no complicated tools needed. Just heated water, a teaspoon of whole botanicals, and five undisturbed minutes to reclaim your clarity.
+              {content?.closing_note || "No hurried preparation, no complicated tools needed. Just heated water, a teaspoon of whole botanicals, and five undisturbed minutes to reclaim your clarity."}
             </p>
           </div>
 

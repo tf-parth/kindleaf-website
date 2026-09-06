@@ -11,7 +11,8 @@
       "stock": 100,
       "sku": "KL-HT-NAT-50",
       "weight": "50g",
-      "category": "Herbal Green Tea",
+      "category": "Single Pack",
+      "variant": "Single Pack",
       "benefits": [
         "🍃 100% Natural Base",
         "🍋 Citrus Lemongrass notes",
@@ -23,13 +24,19 @@
         "Fresh Lemongrass",
         "Dry Ginger Root"
       ],
+      "taste_profile": "Crisp green tea with bright citrus lemongrass and a lingering ginger warmth.",
+      "aroma": "Fresh cut lemongrass and aromatic holy basil (Tulsi) steam.",
+      "brewing_summary": "85°C water • 1 tsp (~2g) • 3-5 mins covered",
       "brewing_instructions": [
         "Heat fresh water to approx. 85°C (bubbles forming, not boiling).",
         "Add 1 teaspoon (approx 2g) of tea blend into your infuser cup.",
         "Pour water and steep covered for 3 to 5 minutes.",
         "Inhale the steam, strain, and sip mindfully."
       ],
+      "fssai_info": "FSSAI Licensed Food Business • Handcrafted in Jasrana, UP, India",
       "amazon_url": "https://www.amazon.in/dp/B0GQCZM7YN",
+      "amazon_button_enabled": true,
+      "display_order": 1,
       "img": "/assets/product_natural.png",
       "images": [
         "/assets/product_natural.png"
@@ -50,7 +57,8 @@
       "stock": 85,
       "sku": "KL-HT-COMBO-100",
       "weight": "100g (2x50g)",
-      "category": "Herbal Green Tea",
+      "category": "Duo Pack",
+      "variant": "Duo Pack",
       "benefits": [
         "🍵 Double the Blend",
         "✨ Fresh & Aromatic",
@@ -62,13 +70,19 @@
         "Fresh Lemongrass",
         "Dry Ginger Root"
       ],
+      "taste_profile": "Zesty, herbaceous, and warm. Designed for regular daily tea rituals.",
+      "aroma": "Fragrant holy basil and uplifting citrus bouquet.",
+      "brewing_summary": "85°C water • 1 tsp (~2g) • 3-5 mins covered",
       "brewing_instructions": [
         "Heat fresh water to approx. 85°C.",
         "Add 1 teaspoon of tea blend to your cup.",
         "Pour water and steep covered for 3 to 5 minutes.",
         "Strain, sip, and take a mindful pause."
       ],
+      "fssai_info": "FSSAI Licensed Food Business • Handcrafted in Jasrana, UP, India",
       "amazon_url": "https://www.amazon.in/dp/B0GQCZM7YN",
+      "amazon_button_enabled": true,
+      "display_order": 2,
       "img": "/assets/product_combo.png",
       "images": [
         "/assets/product_combo.png"

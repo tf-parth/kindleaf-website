@@ -8,7 +8,8 @@ import {
   Tag, Home, Sparkles, Clock, HelpCircle, BookOpen, Scale, 
   Search, Globe, Smartphone, Share2, LogOut, Menu, X, Plus, 
   Edit, Trash2, Check, ExternalLink, Eye, Upload, Music, 
-  AlertTriangle, CheckCircle2, ChevronRight, Copy, ArrowUpRight
+  AlertTriangle, CheckCircle2, ChevronRight, Copy, ArrowUpRight,
+  ChevronUp, ChevronDown, ShoppingBag
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
@@ -106,7 +107,7 @@ export default function AdminDashboard() {
         faqRes, homeRes, brewRes, storyRes, legalRes,
         seoRes, appRes, socialRes
       ] = await Promise.all([
-        fetch('/api/products').then(r => r.json()).catch(() => []),
+        fetch('/api/products?all=true').then(r => r.json()).catch(() => []),
         fetch('/api/journal?all=true').then(r => r.json()).catch(() => []),
         fetch('/api/media').then(r => r.json()).catch(() => []),
         fetch('/api/offers?all=true').then(r => r.json()).catch(() => []),
@@ -190,6 +191,72 @@ export default function AdminDashboard() {
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Quick Product Toggles & Reorder
+  const toggleProductStatus = async (p: any) => {
+    const nextStatus = p.status === 'published' ? 'draft' : 'published';
+    const updated = { ...p, status: nextStatus };
+    try {
+      await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      });
+      setProducts(prev => prev.map(item => item.id === p.id ? updated : item));
+      showToast(`Product set to ${nextStatus}`);
+    } catch (e: any) {
+      showToast(e.message || 'Error updating product', 'error');
+    }
+  };
+
+  const toggleProductAmazon = async (p: any) => {
+    const nextVal = !p.amazon_button_enabled;
+    const updated = { ...p, amazon_button_enabled: nextVal };
+    try {
+      await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      });
+      setProducts(prev => prev.map(item => item.id === p.id ? updated : item));
+      showToast(`Amazon button turned ${nextVal ? 'ON' : 'OFF'}`);
+    } catch (e: any) {
+      showToast(e.message || 'Error updating product', 'error');
+    }
+  };
+
+  const moveProductOrder = async (p: any, direction: 'up' | 'down') => {
+    const sorted = [...products].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+    const idx = sorted.findIndex(item => item.id === p.id);
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= sorted.length) return;
+
+    const target = sorted[targetIdx];
+    const oldCurrentOrder = p.display_order ?? idx;
+    const oldTargetOrder = target.display_order ?? targetIdx;
+
+    const newCurrentOrder = oldTargetOrder;
+    const newTargetOrder = oldCurrentOrder === oldTargetOrder ? (direction === 'up' ? oldTargetOrder + 1 : oldTargetOrder - 1) : oldCurrentOrder;
+
+    const updatedCurrent = { ...p, display_order: newCurrentOrder };
+    const updatedTarget = { ...target, display_order: newTargetOrder };
+
+    setProducts(prev => prev.map(item => {
+      if (item.id === p.id) return updatedCurrent;
+      if (item.id === target.id) return updatedTarget;
+      return item;
+    }));
+
+    try {
+      await Promise.all([
+        fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedCurrent) }),
+        fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedTarget) })
+      ]);
+      showToast("Product order updated!");
+    } catch (e: any) {
+      showToast(e.message || 'Error saving order', 'error');
     }
   };
 
@@ -508,8 +575,12 @@ export default function AdminDashboard() {
                     aroma: "",
                     brewing_summary: "85°C water • 1 tsp (~2g) • 3-5 mins covered",
                     fssai_info: "FSSAI Licensed Food Business",
+                    ingredients: "Rose petals, chamomile, lavender, spearmint, ashwagandha, stevia leaf",
                     img: "/assets/product_natural.png",
                     images: ["/assets/product_natural.png"],
+                    amazon_url: "",
+                    amazon_button_enabled: true,
+                    display_order: products.length,
                     status: "published",
                     featured: false,
                     seo_title: "",
@@ -553,26 +624,52 @@ export default function AdminDashboard() {
             </div>
 
             {/* Products Table */}
-            <div className="rounded-2xl border border-white/10 bg-[#0c1912] overflow-hidden">
-              <table className="w-full text-left text-xs">
+            <div className="rounded-2xl border border-white/10 bg-[#0c1912] overflow-x-auto">
+              <table className="w-full text-left text-xs min-w-[750px]">
                 <thead className="border-b border-white/10 bg-[#0a150f] text-slate-400 uppercase tracking-wider text-[10px]">
                   <tr>
+                    <th className="p-4 w-14 text-center">Order</th>
                     <th className="p-4">Product</th>
                     <th className="p-4">Net Weight</th>
-                    <th className="p-4">Category</th>
+                    <th className="p-4">Amazon Purchase</th>
                     <th className="p-4">Status</th>
                     <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {products
+                  {[...products]
+                    .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
                     .filter(p => {
                       const matchesSearch = p.title?.toLowerCase().includes(searchQuery.toLowerCase()) || p.slug?.toLowerCase().includes(searchQuery.toLowerCase());
                       const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
                       return matchesSearch && matchesStatus;
                     })
-                    .map(p => (
-                      <tr key={p.id} className="hover:bg-white/5 transition-colors">
+                    .map((p, idx, arr) => (
+                      <tr key={p.id || idx} className="hover:bg-white/5 transition-colors">
+                        {/* Order Controls */}
+                        <td className="p-4 text-center">
+                          <div className="flex flex-col items-center justify-center gap-0.5">
+                            <button
+                              onClick={() => moveProductOrder(p, 'up')}
+                              disabled={idx === 0}
+                              title="Move up"
+                              className="p-1 rounded text-slate-400 hover:text-gold disabled:opacity-20 disabled:hover:text-slate-400 transition-colors cursor-pointer"
+                            >
+                              <ChevronUp size={14} />
+                            </button>
+                            <span className="text-[10px] font-mono text-gold font-bold">{p.display_order ?? idx}</span>
+                            <button
+                              onClick={() => moveProductOrder(p, 'down')}
+                              disabled={idx === arr.length - 1}
+                              title="Move down"
+                              className="p-1 rounded text-slate-400 hover:text-gold disabled:opacity-20 disabled:hover:text-slate-400 transition-colors cursor-pointer"
+                            >
+                              <ChevronDown size={14} />
+                            </button>
+                          </div>
+                        </td>
+
+                        {/* Product Info */}
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             <img src={p.img || '/assets/product_natural.png'} alt={p.title} className="w-10 h-10 object-contain rounded-lg bg-[#163322]/30 p-1 border border-white/10" />
@@ -582,15 +679,64 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                         </td>
-                        <td className="p-4 font-mono text-gold font-semibold">{p.weight}</td>
-                        <td className="p-4 text-slate-300">{p.category || 'Herbal Tea'}</td>
+
+                        {/* Weight & Category */}
                         <td className="p-4">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            p.status === 'published' ? 'bg-emerald-900/40 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'
-                          }`}>
-                            {p.status}
-                          </span>
+                          <div className="font-mono text-gold font-semibold">{p.weight}</div>
+                          <div className="text-[10px] text-slate-400">{p.category || 'Single Pack'}</div>
                         </td>
+
+                        {/* Amazon Purchase Status & Quick Toggle */}
+                        <td className="p-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => toggleProductAmazon(p)}
+                                title={p.amazon_button_enabled ? "Click to turn OFF Amazon button" : "Click to turn ON Amazon button"}
+                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer transition-colors ${
+                                  p.amazon_button_enabled 
+                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30' 
+                                    : 'bg-slate-800 text-slate-400 border border-white/5 hover:bg-slate-700'
+                                }`}
+                              >
+                                <ShoppingBag size={10} />
+                                <span>{p.amazon_button_enabled ? 'AMAZON ON' : 'AMAZON OFF'}</span>
+                              </button>
+
+                              {p.amazon_url && (
+                                <a
+                                  href={p.amazon_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title="Test Amazon Product Link"
+                                  className="text-slate-400 hover:text-gold transition-colors p-1"
+                                >
+                                  <ExternalLink size={12} />
+                                </a>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-slate-400 truncate max-w-[180px]" title={p.amazon_url || "No Amazon URL set"}>
+                              {p.amazon_url ? p.amazon_url.replace(/^https?:\/\//, '') : 'No URL set'}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* 1-Click Status Toggle */}
+                        <td className="p-4">
+                          <button
+                            onClick={() => toggleProductStatus(p)}
+                            title={`Click to set as ${p.status === 'published' ? 'draft' : 'published'}`}
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                              p.status === 'published' 
+                                ? 'bg-emerald-900/40 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-900/60' 
+                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                            }`}
+                          >
+                            {p.status}
+                          </button>
+                        </td>
+
+                        {/* Actions */}
                         <td className="p-4 text-right space-x-2">
                           <button
                             onClick={() => {
@@ -1785,155 +1931,341 @@ export default function AdminDashboard() {
         {productModalOpen && editingProduct && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setProductModalOpen(false)} className="fixed inset-0 bg-black/80 backdrop-blur-md" />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-3xl bg-[#0c1912] border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 max-h-[90vh] overflow-y-auto space-y-6">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-4xl bg-[#0c1912] border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 max-h-[92vh] overflow-y-auto space-y-6">
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <h3 className="font-serif font-bold text-xl text-[#F8F6F2]">
-                  {editingProduct.id ? 'Edit Product' : 'Add New Product'}
-                </h3>
+                <div>
+                  <h3 className="font-serif font-bold text-xl text-[#F8F6F2]">
+                    {editingProduct.id ? 'Edit Product' : 'Add New Product'}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Manage public product listing, Amazon purchase button, and botanical details.</p>
+                </div>
                 <button onClick={() => setProductModalOpen(false)} className="p-2 text-slate-400 hover:text-white cursor-pointer"><X size={20} /></button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Basic Details */}
+              <div className="space-y-4">
+                <span className="text-[11px] uppercase font-bold text-gold tracking-wider block">1. Basic Information</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Product Title</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Chamomile &amp; Rose Calming Blend"
+                      value={editingProduct.title || ""}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, title: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Slug (URL identifier)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. chamomile-rose"
+                      value={editingProduct.slug || ""}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, slug: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Net Weight / Pack Size</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 50g Pouch"
+                      value={editingProduct.weight || "50g Pouch"}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, weight: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Variant / Category</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Single Pack or Loose Leaf"
+                      value={editingProduct.category || "Single Pack"}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Product Title</label>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Short Description (Summary for cards &amp; modal)</label>
                   <input
                     type="text"
-                    value={editingProduct.title || ""}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, title: e.target.value })}
+                    placeholder="e.g. A serene botanical infusion of whole chamomile flowers and gentle roses."
+                    value={editingProduct.short_description || ""}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, short_description: e.target.value })}
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
                   />
                 </div>
+
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Slug (URL)</label>
-                  <input
-                    type="text"
-                    value={editingProduct.slug || ""}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, slug: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold font-mono"
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Full Description</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Full product story, wellness benefits, and background."
+                    value={editingProduct.description || ""}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold leading-relaxed"
                   />
                 </div>
+              </div>
+
+              {/* Amazon Purchase Integration Section */}
+              <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShoppingBag size={16} className="text-amber-400" />
+                    <span className="text-xs uppercase font-bold text-amber-300 tracking-wider">2. Amazon Purchase Button Settings</span>
+                  </div>
+                  <label className="flex items-center gap-2 text-xs text-amber-200 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editingProduct.amazon_button_enabled !== false}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, amazon_button_enabled: e.target.checked })}
+                      className="rounded text-gold focus:ring-0"
+                    />
+                    <span className="font-semibold">Enable Amazon Button: ON</span>
+                  </label>
+                </div>
+
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Net Weight / Pack Size</label>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Amazon Product URL</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="url"
+                      placeholder="https://www.amazon.in/dp/..."
+                      value={editingProduct.amazon_url || ""}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, amazon_url: e.target.value })}
+                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold font-mono"
+                    />
+                    {editingProduct.amazon_url && (
+                      <a
+                        href={editingProduct.amazon_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 text-xs flex items-center gap-1 transition-colors"
+                      >
+                        <ExternalLink size={12} />
+                        <span>Test Link</span>
+                      </a>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    When enabled with a valid URL, visitors will see the prominent &ldquo;BUY ON AMAZON&rdquo; button opening in a new tab. When empty or disabled, the button is omitted cleanly.
+                  </p>
+                </div>
+              </div>
+
+              {/* Botanicals, Notes & Brewing Specs */}
+              <div className="space-y-4">
+                <span className="text-[11px] uppercase font-bold text-gold tracking-wider block">3. Botanical Formulation &amp; Brewing Specifications</span>
+                
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Botanical Ingredients (comma separated)</label>
                   <input
                     type="text"
-                    value={editingProduct.weight || "50g Pouch"}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, weight: e.target.value })}
+                    placeholder="e.g. Rose petals, Chamomile flowers, French Lavender, Spearmint leaf"
+                    value={Array.isArray(editingProduct.ingredients) ? editingProduct.ingredients.join(', ') : (editingProduct.ingredients || "")}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, ingredients: e.target.value })}
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
                   />
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Taste Profile Notes</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Floral, gentle honey-like sweetness, velvety finish"
+                      value={editingProduct.taste_profile || ""}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, taste_profile: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Aroma Notes</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Delicate blooming roses and fresh herbal meadow"
+                      value={editingProduct.aroma || ""}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, aroma: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Brewing Summary</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 85°C water • 1 tsp (~2g) • 3-5 mins covered"
+                      value={editingProduct.brewing_summary || "85°C water • 1 tsp (~2g) • 3-5 mins covered"}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, brewing_summary: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">FSSAI Status / Regulatory</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. FSSAI Licensed Food Business"
+                      value={editingProduct.fssai_info || "FSSAI Licensed Food Business"}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, fssai_info: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Product Media & Gallery */}
+              <div className="space-y-4">
+                <span className="text-[11px] uppercase font-bold text-gold tracking-wider block">4. Imagery &amp; Gallery</span>
+
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Category / Variant</label>
-                  <input
-                    type="text"
-                    value={editingProduct.category || "Single Pack"}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
-                  />
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Main Product Image URL</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      value={editingProduct.img || ""}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, img: e.target.value })}
+                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openMediaPicker((url) => setEditingProduct({ ...editingProduct, img: url }))}
+                      className="px-4 py-2 rounded-xl bg-gold/10 hover:bg-gold/20 text-gold text-xs font-semibold border border-gold/30 cursor-pointer"
+                    >
+                      Select Media
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1">Short Description</label>
-                <input
-                  type="text"
-                  value={editingProduct.short_description || ""}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, short_description: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1">Full Description</label>
-                <textarea
-                  rows={3}
-                  value={editingProduct.description || ""}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold leading-relaxed"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1">Product Main Image URL</label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    value={editingProduct.img || ""}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, img: e.target.value })}
-                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold font-mono"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => openMediaPicker((url) => setEditingProduct({ ...editingProduct, img: url }))}
-                    className="px-4 py-2 rounded-xl bg-gold/10 hover:bg-gold/20 text-gold text-xs font-semibold border border-gold/30 cursor-pointer"
-                  >
-                    Select Media
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">Taste Profile Notes</label>
-                  <input
-                    type="text"
-                    value={editingProduct.taste_profile || ""}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, taste_profile: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">FSSAI Status</label>
-                  <input
-                    type="text"
-                    value={editingProduct.fssai_info || "FSSAI Licensed Food Business"}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, fssai_info: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-semibold text-slate-300">Product Gallery Images</label>
+                    <button
+                      type="button"
+                      onClick={() => openMediaPicker((url) => {
+                        const current = Array.isArray(editingProduct.images) ? [...editingProduct.images] : [];
+                        setEditingProduct({ ...editingProduct, images: [...current, url] });
+                      })}
+                      className="text-xs text-gold hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus size={12} /> Add from Media Library
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-3 p-3 rounded-xl bg-white/5 border border-white/10 min-h-[70px]">
+                    {(Array.isArray(editingProduct.images) ? editingProduct.images : []).map((imgUrl: string, gIdx: number) => (
+                      <div key={gIdx} className="relative group w-16 h-16 rounded-lg overflow-hidden border border-white/20 bg-black/40">
+                        <img src={imgUrl} alt={`Gallery ${gIdx}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const copy = [...editingProduct.images];
+                            copy.splice(gIdx, 1);
+                            setEditingProduct({ ...editingProduct, images: copy });
+                          }}
+                          className="absolute inset-0 bg-black/70 flex items-center justify-center text-red-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                    {(!editingProduct.images || editingProduct.images.length === 0) && (
+                      <span className="text-xs text-slate-500 italic flex items-center">No extra gallery images added.</span>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-6 pt-2">
-                <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={editingProduct.status === 'published'}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, status: e.target.checked ? 'published' : 'draft' })}
-                    className="rounded text-gold focus:ring-0"
-                  />
-                  <span>Published on Live Website</span>
-                </label>
-                <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={editingProduct.featured || false}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, featured: e.target.checked })}
-                    className="rounded text-gold focus:ring-0"
-                  />
-                  <span>Featured Product</span>
-                </label>
+              {/* Publishing & SEO */}
+              <div className="space-y-4">
+                <span className="text-[11px] uppercase font-bold text-gold tracking-wider block">5. Organization, SEO &amp; Status</span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">Display Order</label>
+                    <input
+                      type="number"
+                      value={editingProduct.display_order ?? 0}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, display_order: parseInt(e.target.value) || 0 })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">SEO Title (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="Meta title for Google"
+                      value={editingProduct.seo_title || ""}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, seo_title: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 block mb-1">SEO Description (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="Meta description"
+                      value={editingProduct.seo_description || ""}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, seo_description: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-6 pt-2">
+                  <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editingProduct.status === 'published'}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, status: e.target.checked ? 'published' : 'draft' })}
+                      className="rounded text-gold focus:ring-0"
+                    />
+                    <span className="font-semibold text-[#F8F6F2]">Published on Live Website</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editingProduct.featured || false}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, featured: e.target.checked })}
+                      className="rounded text-gold focus:ring-0"
+                    />
+                    <span>Featured Product</span>
+                  </label>
+                </div>
               </div>
 
+              {/* Footer Save & Cancel */}
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
                 <button onClick={() => setProductModalOpen(false)} className="px-5 py-2.5 rounded-xl text-xs text-slate-300 hover:text-white bg-white/5 cursor-pointer">Cancel</button>
                 <button
                   onClick={async () => {
-                    const res = await fetch('/api/products', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(editingProduct)
-                    });
-                    const saved = await res.json();
-                    setProducts(prev => {
-                      const idx = prev.findIndex(p => p.id === saved.id);
-                      if (idx >= 0) {
-                        const copy = [...prev];
-                        copy[idx] = saved;
-                        return copy;
-                      }
-                      return [saved, ...prev];
-                    });
-                    showToast("Product saved & published!");
-                    setProductModalOpen(false);
+                    // Normalize ingredients if string
+                    let toSave = { ...editingProduct };
+                    if (typeof toSave.ingredients === 'string') {
+                      toSave.ingredients = toSave.ingredients.split(',').map((s: string) => s.trim()).filter(Boolean);
+                    }
+                    try {
+                      const res = await fetch('/api/products', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(toSave)
+                      });
+                      const saved = await res.json();
+                      setProducts(prev => {
+                        const idx = prev.findIndex(p => p.id === saved.id);
+                        if (idx >= 0) {
+                          const copy = [...prev];
+                          copy[idx] = saved;
+                          return copy;
+                        }
+                        return [saved, ...prev];
+                      });
+                      showToast("Product saved & published!");
+                      setProductModalOpen(false);
+                    } catch (e: any) {
+                      showToast(e.message || "Error saving product", "error");
+                    }
                   }}
                   className="px-6 py-2.5 rounded-xl text-xs font-bold text-[#0c1912] bg-gold hover:bg-gold-hover cursor-pointer shadow"
                 >
@@ -2131,14 +2463,25 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1">End Date</label>
+                  <label className="text-xs font-semibold text-slate-300 block mb-1">Button Target Link (URL)</label>
                   <input
-                    type="date"
-                    value={editingOffer.end_date || ""}
-                    onChange={(e) => setEditingOffer({ ...editingOffer, end_date: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                    type="text"
+                    placeholder="e.g. Amazon URL, /#app-download, etc."
+                    value={editingOffer.cta_link || ""}
+                    onChange={(e) => setEditingOffer({ ...editingOffer, cta_link: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold font-mono"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">End Date</label>
+                <input
+                  type="date"
+                  value={editingOffer.end_date || ""}
+                  onChange={(e) => setEditingOffer({ ...editingOffer, end_date: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-[#F8F6F2] outline-none focus:border-gold"
+                />
               </div>
 
               <div className="flex items-center gap-6 pt-2">

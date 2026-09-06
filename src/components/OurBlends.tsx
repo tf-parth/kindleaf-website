@@ -1,5 +1,5 @@
 import React from 'react';
-import { Smartphone, Eye, ArrowRight, ShieldCheck, Sparkles, Clock, Leaf } from 'lucide-react';
+import { Smartphone, Eye, ArrowRight, ShieldCheck, Sparkles, Clock, Leaf, ShoppingBag, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
 export interface ProductItem {
@@ -11,9 +11,16 @@ export interface ProductItem {
   weight: string;
   category?: string;
   taste_profile?: string;
+  aroma?: string;
+  ingredients?: string | string[];
   img?: string;
+  images?: string[];
   brewing_summary?: string;
+  fssai_info?: string;
+  amazon_url?: string;
+  amazon_button_enabled?: boolean;
   status?: string;
+  display_order?: number;
 }
 
 interface OurBlendsProps {
@@ -34,8 +41,13 @@ export default function OurBlends({ products, onSelectProduct, onOpenAppModal }:
       weight: "50g Pouch",
       category: "Single Pack",
       taste_profile: "Crisp green tea with bright citrus lemongrass and a lingering ginger warmth.",
+      aroma: "Fresh cut botanicals with peppery holy basil and citrus",
+      ingredients: ["Premium Green Tea", "Tulsi", "Lemongrass", "Dried Ginger"],
       img: "/assets/product_natural.png",
       brewing_summary: "85°C water • 1 tsp (~2g) • 3-5 mins covered",
+      fssai_info: "FSSAI Licensed Food Business • Handcrafted in UP, India",
+      amazon_url: "https://www.amazon.in/dp/B0D1SAMPLE",
+      amazon_button_enabled: true,
       status: "published"
     },
     {
@@ -47,8 +59,13 @@ export default function OurBlends({ products, onSelectProduct, onOpenAppModal }:
       weight: "100g (2x50g Pouches)",
       category: "Duo Pack",
       taste_profile: "Zesty, herbaceous, and warm. Designed for regular daily tea rituals.",
+      aroma: "Fragrant soothing meadow with warming ginger note",
+      ingredients: ["Premium Green Tea", "Tulsi", "Lemongrass", "Dried Ginger"],
       img: "/assets/product_combo.png",
       brewing_summary: "85°C water • 1 tsp (~2g) • 3-5 mins covered",
+      fssai_info: "FSSAI Licensed Food Business • Handcrafted in UP, India",
+      amazon_url: "https://www.amazon.in/dp/B0D2SAMPLE",
+      amazon_button_enabled: true,
       status: "published"
     }
   ];
@@ -74,89 +91,111 @@ export default function OurBlends({ products, onSelectProduct, onOpenAppModal }:
 
         {/* Informational Product Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
-          {displayProducts.map((prod) => (
-            <article 
-              key={prod.id} 
-              className="glass-panel border border-white/10 rounded-3xl overflow-hidden shadow-xl hover:border-gold/40 transition-all duration-300 flex flex-col justify-between group"
-            >
-              {/* Product Visual Container */}
-              <div className="relative aspect-4/3 overflow-hidden bg-gradient-to-b from-[#163322]/40 to-[#0a150f] p-8 flex items-center justify-center">
-                <img 
-                  src={prod.img || "/assets/product_natural.png"} 
-                  alt={prod.title} 
-                  className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500" 
-                />
-                <div className="absolute top-4 left-4 bg-[#0c1912]/80 backdrop-blur-md border border-white/10 text-gold text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
-                  {prod.category || "Herbal Green Tea"}
-                </div>
-                <div className="absolute top-4 right-4 bg-[#0c1912]/80 backdrop-blur-md border border-white/10 text-slate-300 text-[10px] font-bold px-3 py-1 rounded-full">
-                  {prod.weight}
-                </div>
-              </div>
+          {displayProducts.map((prod) => {
+            const ingredientsText = Array.isArray(prod.ingredients)
+              ? prod.ingredients.join(', ')
+              : (prod.ingredients || "Green Tea, Tulsi, Lemongrass, Dried Ginger");
+            const hasAmazon = Boolean(prod.amazon_url && prod.amazon_button_enabled !== false);
 
-              {/* Product Informational Details */}
-              <div className="p-6 sm:p-8 flex-1 flex flex-col justify-between space-y-6">
-                <div>
-                  <h3 className="font-serif font-bold text-xl sm:text-2xl text-[#F8F6F2] mb-3 group-hover:text-gold transition-colors">
-                    {prod.title}
-                  </h3>
-                  <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-4">
-                    {prod.description || prod.short_description}
-                  </p>
-
-                  {/* Informational Breakdown Specs */}
-                  <div className="space-y-3 pt-2 border-t border-white/10 text-xs">
-                    <div className="flex items-start gap-2 text-slate-300">
-                      <Leaf size={14} className="text-gold mt-0.5 shrink-0" />
-                      <span>
-                        <strong className="text-slate-200">Ingredients:</strong> Green Tea, Tulsi, Lemongrass, Dried Ginger
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-2 text-slate-300">
-                      <Sparkles size={14} className="text-gold mt-0.5 shrink-0" />
-                      <span>
-                        <strong className="text-slate-200">Taste Profile:</strong> {prod.taste_profile || "Fresh vegetal green tea, peppery herbal aroma, bright citrus, warm finish"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-2 text-slate-300">
-                      <Clock size={14} className="text-gold mt-0.5 shrink-0" />
-                      <span>
-                        <strong className="text-slate-200">Brewing:</strong> {prod.brewing_summary || "85°C water • 1 tsp (~2g) • Steep covered 3–5 minutes"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-2 text-slate-300">
-                      <ShieldCheck size={14} className="text-gold mt-0.5 shrink-0" />
-                      <span>
-                        <strong className="text-slate-200">Quality:</strong> FSSAI Licensed Food Business • Handcrafted in UP, India
-                      </span>
-                    </div>
+            return (
+              <article 
+                key={prod.id} 
+                className="glass-panel border border-white/10 rounded-3xl overflow-hidden shadow-xl hover:border-gold/40 transition-all duration-300 flex flex-col justify-between group"
+              >
+                {/* Product Visual Container */}
+                <div className="relative aspect-4/3 overflow-hidden bg-gradient-to-b from-[#163322]/40 to-[#0a150f] p-8 flex items-center justify-center">
+                  <img 
+                    src={prod.img || "/assets/product_natural.png"} 
+                    alt={prod.title} 
+                    className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500" 
+                  />
+                  <div className="absolute top-4 left-4 bg-[#0c1912]/80 backdrop-blur-md border border-white/10 text-gold text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                    {prod.category || "Herbal Green Tea"}
+                  </div>
+                  <div className="absolute top-4 right-4 bg-[#0c1912]/80 backdrop-blur-md border border-white/10 text-slate-300 text-[10px] font-bold px-3 py-1 rounded-full">
+                    {prod.weight}
                   </div>
                 </div>
 
-                {/* Card Actions: VIEW PRODUCT & Link to Page */}
-                <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center gap-3">
-                  <button
-                    onClick={() => onSelectProduct(prod)}
-                    className="w-full sm:flex-1 bg-[#163322] hover:bg-[#1b4332] text-gold border border-gold/40 font-semibold px-5 py-3 rounded-xl transition-all duration-300 text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-gold/10"
-                  >
-                    <Eye size={15} />
-                    <span>VIEW PRODUCT</span>
-                  </button>
+                {/* Product Informational Details */}
+                <div className="p-6 sm:p-8 flex-1 flex flex-col justify-between space-y-6">
+                  <div>
+                    <h3 className="font-serif font-bold text-xl sm:text-2xl text-[#F8F6F2] mb-3 group-hover:text-gold transition-colors">
+                      {prod.title}
+                    </h3>
+                    <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-4">
+                      {prod.description || prod.short_description}
+                    </p>
 
-                  <Link
-                    href={`/blends/${prod.slug || (prod.weight.includes('200') ? 'herbal-green-tea-combo' : 'herbal-green-tea-natural')}`}
-                    className="w-full sm:w-auto text-slate-300 hover:text-gold text-xs font-semibold px-4 py-3 rounded-xl border border-white/10 hover:border-white/20 transition-colors flex items-center justify-center gap-1.5"
-                  >
-                    <span>Full Facts</span>
-                    <ArrowRight size={13} />
-                  </Link>
+                    {/* Informational Breakdown Specs */}
+                    <div className="space-y-3 pt-2 border-t border-white/10 text-xs">
+                      <div className="flex items-start gap-2 text-slate-300">
+                        <Leaf size={14} className="text-gold mt-0.5 shrink-0" />
+                        <span>
+                          <strong className="text-slate-200">Ingredients:</strong> {ingredientsText}
+                        </span>
+                      </div>
+
+                      <div className="flex items-start gap-2 text-slate-300">
+                        <Sparkles size={14} className="text-gold mt-0.5 shrink-0" />
+                        <span>
+                          <strong className="text-slate-200">Taste Profile:</strong> {prod.taste_profile || "Fresh vegetal green tea, peppery herbal aroma, bright citrus, warm finish"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-start gap-2 text-slate-300">
+                        <Clock size={14} className="text-gold mt-0.5 shrink-0" />
+                        <span>
+                          <strong className="text-slate-200">Brewing:</strong> {prod.brewing_summary || "85°C water • 1 tsp (~2g) • Steep covered 3–5 minutes"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-start gap-2 text-slate-300">
+                        <ShieldCheck size={14} className="text-gold mt-0.5 shrink-0" />
+                        <span>
+                          <strong className="text-slate-200">Quality:</strong> {prod.fssai_info || "FSSAI Licensed Food Business • Handcrafted in UP, India"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Actions: BUY ON AMAZON (if enabled) + VIEW PRODUCT + Link to Facts */}
+                  <div className="pt-4 border-t border-white/10 space-y-3">
+                    {hasAmazon && (
+                      <a
+                        href={prod.amazon_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-[#0c1912] font-bold px-5 py-3 rounded-xl transition-all duration-300 text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md hover:shadow-amber-500/20 tracking-wider"
+                      >
+                        <ShoppingBag size={15} />
+                        <span>BUY ON AMAZON</span>
+                        <ExternalLink size={13} />
+                      </a>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                      <button
+                        onClick={() => onSelectProduct(prod)}
+                        className="w-full sm:flex-1 bg-[#163322] hover:bg-[#1b4332] text-gold border border-gold/40 font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-gold/10"
+                      >
+                        <Eye size={14} />
+                        <span>VIEW PRODUCT</span>
+                      </button>
+
+                      <Link
+                        href={`/blends/${prod.slug || (prod.weight?.includes('200') ? 'herbal-green-tea-combo' : 'herbal-green-tea-natural')}`}
+                        className="w-full sm:w-auto text-slate-300 hover:text-gold text-xs font-semibold px-4 py-2.5 rounded-xl border border-white/10 hover:border-white/20 transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <span>Full Facts</span>
+                        <ArrowRight size={13} />
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
 
         {/* Section Notice: Direct Orders Routed to App */}
@@ -166,7 +205,7 @@ export default function OurBlends({ products, onSelectProduct, onOpenAppModal }:
               Looking to order Kindleaf tea?
             </h4>
             <p className="text-xs text-slate-300 mt-1">
-              Purchases, batch subscriptions, and tracked orders are handled exclusively within the Kindleaf Mobile App.
+              Purchases, batch subscriptions, and tracked orders are handled exclusively within the Kindleaf Mobile App or direct Amazon official store.
             </p>
           </div>
           <button

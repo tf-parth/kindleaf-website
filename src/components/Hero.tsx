@@ -6,6 +6,14 @@ import { Smartphone, ArrowDown } from 'lucide-react';
 
 interface HeroProps {
   onOpenAppModal: () => void;
+  content?: {
+    badge?: string;
+    headline?: string;
+    highlight?: string;
+    description?: string;
+    cta_app?: string;
+    cta_explore?: string;
+  } | null;
 }
 
 function createInitialLeaves() {
@@ -32,7 +40,7 @@ function createInitialLeaves() {
   return generated;
 }
 
-export default function Hero({ onOpenAppModal }: HeroProps) {
+export default function Hero({ onOpenAppModal, content }: HeroProps) {
   const shouldReduceMotion = useReducedMotion();
   const [leaves, setLeaves] = useState(() => createInitialLeaves());
 
@@ -80,7 +88,7 @@ export default function Hero({ onOpenAppModal }: HeroProps) {
           className="inline-flex items-center gap-2 bg-[#163322]/80 border border-gold/30 text-gold text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-8 shadow-sm"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-          <span>Official Kindleaf Brand &amp; Product Information</span>
+          <span>{content?.badge || "Official Kindleaf Brand & Product Information"}</span>
         </motion.div>
 
         {/* Hero Heading */}
@@ -90,8 +98,8 @@ export default function Hero({ onOpenAppModal }: HeroProps) {
           transition={{ duration: 0.7, delay: 0.1 }}
           className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif text-[#F8F6F2] leading-[1.15] mb-8 max-w-4xl"
         >
-          Awaken Your Senses,<br />
-          <span className="text-gold italic font-normal">Restore Your Calm</span>
+          {content?.headline || "Awaken Your Senses,"}<br />
+          <span className="text-gold italic font-normal">{content?.highlight || "Restore Your Calm"}</span>
         </motion.h1>
 
         {/* Hero Description */}
@@ -101,7 +109,7 @@ export default function Hero({ onOpenAppModal }: HeroProps) {
           transition={{ duration: 0.7, delay: 0.2 }}
           className="text-base sm:text-lg md:text-xl text-slate-300 max-w-2xl mb-12 leading-relaxed font-normal"
         >
-          Kindleaf crafts artisanal Indian herbal green tea infused with whole holy basil, lemongrass, and ginger. Pure botanicals, mindful daily rituals, and honest Indian craftsmanship.
+          {content?.description || "Kindleaf crafts artisanal Indian herbal green tea infused with whole holy basil, lemongrass, and ginger. Pure botanicals, mindful daily rituals, and honest Indian craftsmanship."}
         </motion.p>
 
         {/* Action CTAs */}
@@ -116,14 +124,14 @@ export default function Hero({ onOpenAppModal }: HeroProps) {
             className="w-full sm:w-auto bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-8 py-4 rounded-full transition-all duration-300 shadow-xl hover:shadow-gold/20 flex items-center justify-center gap-2.5 cursor-pointer transform hover:-translate-y-1 active:translate-y-0 text-sm tracking-wide uppercase font-sans"
           >
             <Smartphone size={18} />
-            <span>GET THE KINDLEAF APP</span>
+            <span>{content?.cta_app || "GET THE KINDLEAF APP"}</span>
           </button>
 
           <a 
-            href="#blend" 
+            href="#blends" 
             className="w-full sm:w-auto glass-panel hover:bg-white/10 text-[#F8F6F2] font-semibold px-8 py-4 rounded-full transition-all duration-300 flex items-center justify-center gap-2 border border-white/20 transform hover:-translate-y-1 active:translate-y-0 text-sm tracking-wide uppercase font-sans"
           >
-            <span>EXPLORE THE BLEND</span>
+            <span>{content?.cta_explore || "EXPLORE THE BLENDS"}</span>
             <ArrowDown size={16} className="text-gold" />
           </a>
         </motion.div>

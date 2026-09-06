@@ -9,6 +9,7 @@ interface OfferBannerProps {
     title: string;
     description?: string;
     cta_text?: string;
+    cta_link?: string;
     active?: boolean;
   } | null;
   onOpenAppModal: () => void;
@@ -23,6 +24,18 @@ export default function OfferBanner({ offer, onOpenAppModal, onDismiss }: OfferB
   const handleDismiss = () => {
     setDismissed(true);
     onDismiss?.();
+  };
+
+  const handleCtaClick = () => {
+    if (offer.cta_link && offer.cta_link.trim().length > 0) {
+      if (offer.cta_link.startsWith('http://') || offer.cta_link.startsWith('https://')) {
+        window.open(offer.cta_link, '_blank', 'noopener,noreferrer');
+        return;
+      }
+      window.location.href = offer.cta_link;
+      return;
+    }
+    onOpenAppModal();
   };
 
   return (
@@ -43,7 +56,7 @@ export default function OfferBanner({ offer, onOpenAppModal, onDismiss }: OfferB
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
-            onClick={onOpenAppModal}
+            onClick={handleCtaClick}
             className="bg-gold hover:bg-gold-hover text-[#0c1912] font-semibold px-3 py-1 rounded-full text-[10px] sm:text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow whitespace-nowrap"
           >
             <span>{offer.cta_text || "GET THE APP"}</span>

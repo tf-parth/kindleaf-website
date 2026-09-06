@@ -43,19 +43,53 @@ function writeMockDb(data: any) {
 // =========================================================
 
 // 1. PRODUCTS
-export async function getProducts() {
+export async function getProducts(includeDrafts = false) {
   if (isSupabaseConfigured && supabase) {
-    const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+    let query = supabase.from('products').select('*');
+    if (!includeDrafts) {
+      query = query.eq('status', 'published');
+    }
+    query = query.order('display_order', { ascending: true }).order('created_at', { ascending: false });
+    const { data, error } = await query;
     if (!error && data) return data;
     console.error('Supabase getProducts failed, falling back to mock:', error);
   }
-  return readMockDb().products;
+
+  const list = readMockDb().products || [];
+  const filtered = includeDrafts ? list : list.filter((p: any) => p.status === 'published');
+  return [...filtered].sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0));
+}
+
+export async function getProductBySlug(slug: string, includeDrafts = false) {
+  if (isSupabaseConfigured && supabase) {
+    let query = supabase.from('products').select('*').eq('slug', slug);
+    if (!includeDrafts) {
+      query = query.eq('status', 'published');
+    }
+    const { data, error } = await query.maybeSingle();
+    if (!error && data) return data;
+  }
+
+  const list = readMockDb().products || [];
+  const prod = list.find((p: any) => p.slug === slug);
+  if (!prod) return null;
+  if (!includeDrafts && prod.status !== 'published') return null;
+  return prod;
 }
 
 export async function saveProduct(product: any) {
+  const cleanProduct = {
+    ...product,
+    display_order: Number(product.display_order) || 0,
+    amazon_button_enabled: Boolean(product.amazon_button_enabled),
+    featured: Boolean(product.featured),
+    status: product.status || 'published',
+    updated_at: new Date().toISOString()
+  };
+
   if (isSupabaseConfigured && supabase) {
-    const isNew = !product.id || product.id.startsWith('mock-');
-    const { id, ...prodData } = product;
+    const isNew = !cleanProduct.id || String(cleanProduct.id).startsWith('mock-');
+    const { id, ...prodData } = cleanProduct;
     
     let query;
     if (isNew) {
@@ -71,10 +105,10 @@ export async function saveProduct(product: any) {
 
   // Mock DB operation
   const db = readMockDb();
-  const index = db.products.findIndex((p: any) => p.id === product.id);
-  const updatedProduct = { ...product };
+  const index = db.products.findIndex((p: any) => p.id === cleanProduct.id);
+  const updatedProduct = { ...cleanProduct };
   
-  if (!updatedProduct.id || updatedProduct.id.startsWith('mock-')) {
+  if (!updatedProduct.id || String(updatedProduct.id).startsWith('mock-')) {
     updatedProduct.id = 'mock-' + Math.random().toString(36).substr(2, 9);
     updatedProduct.created_at = new Date().toISOString();
     db.products.unshift(updatedProduct);
@@ -329,19 +363,22 @@ export async function deleteReview(id: string) {
 
 // 5. HOMEPAGE CONTENT
 export async function getHomepageContent() {
+  const fallback = readMockDb().homepage_content || {};
   if (isSupabaseConfigured && supabase) {
     const { data, error } = await supabase.from('homepage_content').select('*');
-    if (!error && data) {
-      // Convert list of key/content rows to key-value object
-      const contentMap: any = {};
+    if (!error && data && data.length > 0) {
+      const contentMap: any = { ...fallback };
       data.forEach((row: any) => {
         contentMap[row.key] = row.content;
       });
+      if (contentMap.homepage_content) {
+        return { ...fallback, ...contentMap, ...contentMap.homepage_content };
+      }
       return contentMap;
     }
     console.error('Supabase getHomepageContent failed, falling back to mock:', error);
   }
-  return readMockDb().homepage_content;
+  return fallback;
 }
 
 export async function saveHomepageContent(sectionKey: string, content: any) {
@@ -354,11 +391,18 @@ export async function saveHomepageContent(sectionKey: string, content: any) {
       query = supabase.from('homepage_content').insert([{ key: sectionKey, content }]).select();
     }
     const { data, error } = await query;
-    if (!error && data && data[0]) return data[0].content;
+    if (!error && data && data[0]) {
+      const db = readMockDb();
+      if (!db.homepage_content) db.homepage_content = {};
+      db.homepage_content[sectionKey] = { ...db.homepage_content[sectionKey], ...content };
+      writeMockDb(db);
+      return data[0].content;
+    }
     throw new Error(error?.message || 'Supabase saveHomepageContent failed');
   }
 
   const db = readMockDb();
+  if (!db.homepage_content) db.homepage_content = {};
   db.homepage_content[sectionKey] = { ...db.homepage_content[sectionKey], ...content };
   writeMockDb(db);
   return db.homepage_content[sectionKey];
@@ -448,6 +492,21 @@ export async function deleteMedia(id: string) {
 // =========================================================
 // 8. JOURNAL / BLOG ARTICLES
 // =========================================================
+function normalizeArticle(article: any) {
+  if (!article) return null;
+  const img = article.cover_image || article.coverImage || article.image || '/assets/hero_tea_cup.png';
+  const readTime = article.read_time || article.readTime || '4 min read';
+  return {
+    ...article,
+    cover_image: img,
+    coverImage: img,
+    image: img,
+    read_time: readTime,
+    readTime: readTime,
+    status: article.status || 'published'
+  };
+}
+
 export async function getJournalArticles(includeDrafts = false) {
   if (isSupabaseConfigured && supabase) {
     let query = supabase.from('journal_articles').select('*').order('created_at', { ascending: false });
@@ -455,36 +514,50 @@ export async function getJournalArticles(includeDrafts = false) {
       query = query.eq('status', 'published');
     }
     const { data, error } = await query;
-    if (!error && data) return data;
+    if (!error && data) return data.map(normalizeArticle);
     console.error('Supabase getJournalArticles failed, falling back to mock:', error);
   }
   const db = readMockDb();
   const articles = db.journal_articles || [];
-  if (includeDrafts) return articles;
-  return articles.filter((a: any) => a.status === 'published');
+  const filtered = includeDrafts ? articles : articles.filter((a: any) => a.status === 'published');
+  return filtered.map(normalizeArticle);
 }
 
-export async function getJournalArticleBySlug(slug: string) {
+export async function getJournalArticleBySlug(slug: string, includeDrafts = false) {
   if (isSupabaseConfigured && supabase) {
-    const { data, error } = await supabase.from('journal_articles').select('*').eq('slug', slug).single();
-    if (!error && data) return data;
+    let query = supabase.from('journal_articles').select('*').eq('slug', slug);
+    if (!includeDrafts) {
+      query = query.eq('status', 'published');
+    }
+    const { data, error } = await query.maybeSingle();
+    if (!error && data) return normalizeArticle(data);
   }
   const db = readMockDb();
-  return (db.journal_articles || []).find((a: any) => a.slug === slug) || null;
+  const found = (db.journal_articles || []).find((a: any) => a.slug === slug);
+  if (!found) return null;
+  if (!includeDrafts && found.status !== 'published') return null;
+  return normalizeArticle(found);
 }
 
 export async function saveJournalArticle(article: any) {
+  const cleanArticle = {
+    ...article,
+    cover_image: article.cover_image || article.coverImage || article.image || '/assets/hero_tea_cup.png',
+    status: article.status || 'published',
+    updated_at: new Date().toISOString()
+  };
+
   if (isSupabaseConfigured && supabase) {
-    const isNew = !article.id || article.id.startsWith('art-');
-    const { id, ...artData } = article;
+    const isNew = !cleanArticle.id || String(cleanArticle.id).startsWith('art-');
+    const { id, coverImage, image, readTime, ...artData } = cleanArticle;
     let query;
     if (isNew) {
       query = supabase.from('journal_articles').insert([artData]).select();
     } else {
-      query = supabase.from('journal_articles').update({ ...artData, updated_at: new Date().toISOString() }).eq('id', id).select();
+      query = supabase.from('journal_articles').update(artData).eq('id', id).select();
     }
     const { data, error } = await query;
-    if (!error && data && data[0]) return data[0];
+    if (!error && data && data[0]) return normalizeArticle(data[0]);
     console.error('Supabase saveJournalArticle error:', error);
   }
 
@@ -703,92 +776,94 @@ export async function deleteOffer(id: string) {
 }
 
 // =========================================================
-// 12. BREWING GUIDE CONTENT
+// SECTION SETTINGS HELPER (SUPABASE + MOCK FALLBACK)
 // =========================================================
-export async function getBrewingContent() {
+async function getSectionSetting(key: string, fallbackKey: string) {
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase.from('settings').select('value').eq('key', key).maybeSingle();
+    if (!error && data?.value && Object.keys(data.value).length > 0) {
+      return data.value;
+    }
+  }
   const db = readMockDb();
-  return db.brewing_guide || {};
+  return db[fallbackKey] || {};
+}
+
+async function saveSectionSetting(key: string, fallbackKey: string, value: any) {
+  if (isSupabaseConfigured && supabase) {
+    const { data: existing } = await supabase.from('settings').select('id').eq('key', key);
+    let query;
+    if (existing && existing.length > 0) {
+      query = supabase.from('settings').update({ value, updated_at: new Date().toISOString() }).eq('key', key).select();
+    } else {
+      query = supabase.from('settings').insert([{ key, value }]).select();
+    }
+    const { data, error } = await query;
+    if (!error && data && data[0]) {
+      const db = readMockDb();
+      db[fallbackKey] = { ...db[fallbackKey], ...value };
+      writeMockDb(db);
+      return data[0].value;
+    }
+  }
+
+  const db = readMockDb();
+  db[fallbackKey] = { ...db[fallbackKey], ...value };
+  writeMockDb(db);
+  return db[fallbackKey];
+}
+
+// 12. BREWING GUIDE CONTENT
+export async function getBrewingContent() {
+  return getSectionSetting('brewing_guide', 'brewing_guide');
 }
 
 export async function saveBrewingContent(content: any) {
-  const db = readMockDb();
-  db.brewing_guide = { ...db.brewing_guide, ...content };
-  writeMockDb(db);
-  return db.brewing_guide;
+  return saveSectionSetting('brewing_guide', 'brewing_guide', content);
 }
 
-// =========================================================
 // 13. OUR STORY CONTENT
-// =========================================================
 export async function getOurStoryContent() {
-  const db = readMockDb();
-  return db.our_story || {};
+  return getSectionSetting('our_story', 'our_story');
 }
 
 export async function saveOurStoryContent(content: any) {
-  const db = readMockDb();
-  db.our_story = { ...db.our_story, ...content };
-  writeMockDb(db);
-  return db.our_story;
+  return saveSectionSetting('our_story', 'our_story', content);
 }
 
-// =========================================================
 // 14. LEGAL CONTENT
-// =========================================================
 export async function getLegalContent() {
-  const db = readMockDb();
-  return db.legal_content || {};
+  return getSectionSetting('legal_content', 'legal_content');
 }
 
 export async function saveLegalContent(content: any) {
-  const db = readMockDb();
-  db.legal_content = { ...db.legal_content, ...content };
-  writeMockDb(db);
-  return db.legal_content;
+  return saveSectionSetting('legal_content', 'legal_content', content);
 }
 
-// =========================================================
 // 15. SEO SETTINGS
-// =========================================================
 export async function getSeoSettings() {
-  const db = readMockDb();
-  return db.seo_settings || {};
+  return getSectionSetting('seo_settings', 'seo_settings');
 }
 
 export async function saveSeoSettings(seo: any) {
-  const db = readMockDb();
-  db.seo_settings = { ...db.seo_settings, ...seo };
-  writeMockDb(db);
-  return db.seo_settings;
+  return saveSectionSetting('seo_settings', 'seo_settings', seo);
 }
 
-// =========================================================
 // 16. APP SETTINGS
-// =========================================================
 export async function getAppSettings() {
-  const db = readMockDb();
-  return db.app_settings || {};
+  return getSectionSetting('app_settings', 'app_settings');
 }
 
 export async function saveAppSettings(appSettings: any) {
-  const db = readMockDb();
-  db.app_settings = { ...db.app_settings, ...appSettings };
-  writeMockDb(db);
-  return db.app_settings;
+  return saveSectionSetting('app_settings', 'app_settings', appSettings);
 }
 
-// =========================================================
 // 17. SOCIAL LINKS
-// =========================================================
 export async function getSocialLinks() {
-  const db = readMockDb();
-  return db.social_links || {};
+  return getSectionSetting('social_links', 'social_links');
 }
 
 export async function saveSocialLinks(links: any) {
-  const db = readMockDb();
-  db.social_links = { ...db.social_links, ...links };
-  writeMockDb(db);
-  return db.social_links;
+  return saveSectionSetting('social_links', 'social_links', links);
 }
 
